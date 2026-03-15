@@ -1,16 +1,15 @@
 ---
 name: commit-push-pr
 description: Commits staged changes, pushes to remote, and creates a GitHub PR with a structured description. Runs in the main conversation context.
-allowed-tools:
-  - Bash
-  - Read
-  - Glob
-  - Grep
+disable-model-invocation: true
+argument-hint: "[commit message or description]"
+allowed-tools: Bash, Read, Glob, Grep
 ---
 
 # Commit, Push & Create PR
 
-When the user invokes this skill, perform the following steps:
+When the user invokes this skill, perform the following steps.
+If arguments were provided, use them as guidance for the commit message: $ARGUMENTS
 
 ## Step 1: Assess Changes
 

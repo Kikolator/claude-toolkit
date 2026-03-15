@@ -1,16 +1,13 @@
 ---
 name: e2e
 description: Runs Playwright E2E tests with smart defaults. Supports running all tests, specific files, or tests matching a grep pattern.
-allowed-tools:
-  - Bash
-  - Read
-  - Glob
-  - Grep
+argument-hint: "[file or pattern]"
+allowed-tools: Bash, Read, Glob, Grep
 ---
 
 # E2E Test Runner
 
-Run Playwright end-to-end tests based on the user's input.
+Run Playwright end-to-end tests. Target: $ARGUMENTS
 
 ## Usage
 
