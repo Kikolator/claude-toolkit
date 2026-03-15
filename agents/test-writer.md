@@ -1,9 +1,9 @@
 ---
 name: test-writer
 description: >
-  Use this agent when asked to write tests, create tests, add test coverage,
-  or generate unit/integration tests. Generates Vitest tests for
-  TypeScript/Next.js code following existing project patterns.
+  Use this agent when asked to write tests, generate tests, create test files,
+  add test coverage, or test a specific file, function, or feature.
+  Always delegate to this agent for any testing task.
 tools:
   - Glob
   - Grep
