@@ -38,8 +38,8 @@ mkdir -p .claude/skills
 ln -s /path/to/claude-toolkit/agents .claude/agents
 
 # Copy skills individually — symlinks do NOT work for skills
-cp -r /path/to/claude-toolkit/skills/commit-push-pr .claude/skills/commit-push-pr
-cp -r /path/to/claude-toolkit/skills/e2e .claude/skills/e2e
+cp -r /path/to/claude-toolkit/skills/commit-push-pr .claude/skills/commit-push-pr/
+cp -r /path/to/claude-toolkit/skills/e2e .claude/skills/e2e/
 ```
 
 **Pros:** Agents stay up-to-date automatically.
