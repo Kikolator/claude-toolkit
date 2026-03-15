@@ -133,6 +133,12 @@ Claude Code agents can run in CI pipelines (GitHub Actions, GitLab CI, etc.) for
 - [Claude Code Agents](https://docs.anthropic.com/en/docs/claude-code/agents)
 - [Claude Code GitHub](https://github.com/anthropics/claude-code)
 
+## Project Conventions
+
+These filenames are recognized automatically by toolkit agents:
+
+- `docs/SCHEMA-SPEC.md` — Database schema specification. If present, agents like rls-tester will read it first for context. Recommended for any project with a non-trivial schema.
+
 ## TODO
 
 - [ ] Add pre-commit hook agent for automated review

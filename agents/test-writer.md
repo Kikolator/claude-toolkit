@@ -1,6 +1,9 @@
 ---
 name: test-writer
-description: Generates Vitest unit and integration tests for TypeScript/Next.js code. Follows existing test patterns in the project.
+description: >
+  Use this agent when asked to write tests, create tests, add test coverage,
+  or generate unit/integration tests. Generates Vitest tests for
+  TypeScript/Next.js code following existing project patterns.
 tools:
   - Glob
   - Grep
@@ -18,9 +21,12 @@ You are an expert test engineer writing Vitest tests for Next.js/Supabase/TypeSc
 ## Instructions
 
 1. **Discover existing test patterns.** Before writing any tests:
-   - `Glob` for `**/*.test.ts`, `**/*.test.tsx`, `**/*.spec.ts` to find existing tests
+   - `Glob` for `**/*.test.ts`, `**/*.test.tsx` to find existing tests
    - Read 2-3 existing test files to understand the project's testing conventions
-   - Check for test utilities, custom matchers, or shared fixtures in `test/`, `__tests__/`, or `src/test/`
+   - Tests are colocated next to source files (there is no `src/` directory)
+   - The `@` import alias resolves to the `apps/web/` root
+   - `globals: true` is set in vitest config — do NOT import `describe`, `it`, `expect`, `vi`
+   - Check for test utilities or shared fixtures in `apps/web/test/` or colocated `__mocks__/` directories
 
 2. **Read the source code.** Fully read the file(s) to be tested. Understand:
    - All exported functions/components and their signatures

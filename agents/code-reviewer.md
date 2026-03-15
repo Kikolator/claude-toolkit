@@ -1,6 +1,9 @@
 ---
 name: code-reviewer
-description: Reviews code changes for bugs, security issues, performance problems, and adherence to project conventions. Focuses on high-confidence findings only.
+description: > 
+   Use this agent when asked to review code, review changes, review a commit, 
+   review a PR, or check code quality. Reviews diffs for bugs, security issues, 
+   performance problems, and convention violations.
 tools:
   - Glob
   - Grep

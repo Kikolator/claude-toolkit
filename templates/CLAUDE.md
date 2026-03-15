@@ -22,21 +22,30 @@ TODO: Describe your project here.
 ## Project Structure
 
 ```
-app/                    # Next.js App Router pages and layouts
-  (auth)/               # Auth-related routes (login, signup, etc.)
-  (dashboard)/          # Protected dashboard routes
-  api/                  # API route handlers
-components/             # Shared React components
-lib/                    # Shared utilities and configurations
-  supabase/             # Supabase client initialization
-  stripe/               # Stripe configuration
-hooks/                  # Custom React hooks
-types/                  # Shared TypeScript types
-supabase/
-  migrations/           # Database migrations
-```
+apps/
+  web/                          # Next.js App Router (no src/ directory)
+    app/                        # Pages, layouts, route handlers
+    components/                 # React components
+    lib/                        # Utilities, Supabase/Stripe clients
+    hooks/                      # Custom React hooks
+    types/                      # TypeScript types
+    *.test.ts                   # Colocated unit tests (Vitest)
+    vitest.config.ts            # Vitest configuration
+    playwright.config.ts        # Playwright configuration
 
-TODO: Adjust to match your actual project structure.
+packages/
+  db/                           # Supabase database package
+    supabase/
+      migrations/               # SQL migrations
+      config.toml               # Supabase project config
+    types/
+      database.ts               # Generated DB types (supabase gen types)
+    docs/
+      MT-SCHEMA-SPEC.md         # Multi-tenant schema specification
+
+.claude/                        # Symlinked from claude-toolkit
+.github/                        # CI workflows
+```
 
 ## Conventions
 
