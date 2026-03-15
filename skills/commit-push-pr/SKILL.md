@@ -48,6 +48,7 @@ If nothing is staged, ask the user what to stage or suggest staging all modified
 - Never push to main/master directly — warn the user and suggest creating a branch
 - Never commit files matching: `.env*`, `*.pem`, `*credentials*`, `*secret*`
 - Always show the commit message and PR body for user approval before executing
+- Default PR base branch is `dev`. Use `gh pr create --base dev`. Only target `main` if the user explicitly instructs it.
 
 ## TODO
 - [ ] Add support for draft PRs (--draft flag)
