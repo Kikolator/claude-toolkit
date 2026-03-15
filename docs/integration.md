@@ -26,36 +26,42 @@ cp /path/to/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
 **Pros:** Simple, no external dependencies, files are versioned with your project.
 **Cons:** Updates to the toolkit require manual re-copying.
 
-## Option 2: Symlink (Stay Updated)
+## Option 2: Symlink Agents + Copy Skills (Recommended)
 
-Symlink the toolkit directories into your project's `.claude/` directory.
+Symlink agents (symlinks work) and copy skills (symlinks are broken for skill discovery).
 
 ```bash
 # From your project root:
-mkdir -p .claude
+mkdir -p .claude/skills
 
-# Symlink entire directories
+# Symlink agents — works fine
 ln -s /path/to/claude-toolkit/agents .claude/agents
-ln -s /path/to/claude-toolkit/skills .claude/skills
+
+# Copy skills individually — symlinks do NOT work for skills
+cp -r /path/to/claude-toolkit/skills/commit-push-pr .claude/skills/
+cp -r /path/to/claude-toolkit/skills/e2e .claude/skills/
 ```
 
-**Pros:** Always uses the latest version of the toolkit.
-**Cons:** Requires the toolkit repo to be cloned locally. Symlinks may not work for all team members without shared paths.
+**Pros:** Agents stay up-to-date automatically.
+**Cons:** Skills must be re-copied after toolkit updates.
 
-> **Note:** Add `.claude/` to your `.gitignore` if using symlinks, or commit the symlinks if all team members have the toolkit at the same path.
+> **Note:** Add `.claude/agents` to your `.gitignore` if using symlinks. Skills can be committed since they're real files.
 
 ## Option 3: Git Submodule
 
 ```bash
 git submodule add <toolkit-repo-url> .claude/toolkit
 
-# Then symlink from .claude/toolkit into .claude/
+# Symlink agents from submodule
 ln -s toolkit/agents .claude/agents
-ln -s toolkit/skills .claude/skills
+
+# Copy skills from submodule (symlinks don't work for skills)
+cp -r .claude/toolkit/skills/commit-push-pr .claude/skills/
+cp -r .claude/toolkit/skills/e2e .claude/skills/
 ```
 
 **Pros:** Versioned, shareable across team.
-**Cons:** Submodule management overhead.
+**Cons:** Submodule management overhead. Skills still need copying.
 
 ## Setting Up CLAUDE.md
 
@@ -132,6 +138,11 @@ Follow the standard review process, with these additional project rules:
 - Database queries must use the query builder, not raw SQL
 <!-- ... project-specific rules ... -->
 ```
+
+## Known Limitations
+
+- **Symlinking `.claude/skills/` is broken** (open bug as of Dec 2025) — Claude Code's skill discovery does not follow symlinks. Skills must be copied into `.claude/skills/`, not symlinked.
+- **Agents (`.claude/agents/`) are unaffected** — symlinks work fine for agent discovery.
 
 ## TODO
 - [ ] Add script to automate toolkit installation

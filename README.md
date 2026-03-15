@@ -91,20 +91,19 @@ git clone <this-repo-url> ~/claude-toolkit
 
 ### 2. Integrate into your project
 
-**Copy what you need:**
+**Symlink agents + copy skills:**
 ```bash
-mkdir -p .claude/agents .claude/skills
-cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/
-cp ~/claude-toolkit/agents/verifier.md .claude/agents/
+mkdir -p .claude/skills
+
+# Symlink agents (works fine)
+ln -s ~/claude-toolkit/agents .claude/agents
+
+# Copy skills individually (symlinks are broken for skills)
 cp -r ~/claude-toolkit/skills/commit-push-pr .claude/skills/
+cp -r ~/claude-toolkit/skills/e2e .claude/skills/
 ```
 
-**Or symlink everything:**
-```bash
-mkdir -p .claude
-ln -s ~/claude-toolkit/agents .claude/agents
-ln -s ~/claude-toolkit/skills .claude/skills
-```
+> **Note:** Do NOT symlink the `skills/` directory — Claude Code does not follow symlinks for skill discovery (open bug as of Dec 2025). Agents work fine with symlinks.
 
 ### 3. Set up CLAUDE.md
 
