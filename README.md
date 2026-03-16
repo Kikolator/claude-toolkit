@@ -190,13 +190,36 @@ These filenames are recognized automatically by toolkit agents:
 
 ## TODO
 
+### Agents — New
 - [ ] Add pre-commit hook agent for automated review
 - [ ] Add migration safety checker agent
 - [ ] Add bundle analyzer agent
 - [ ] Add accessibility audit agent
-- [ ] Add setup script for automated integration
-- [ ] Add CI workflow templates (GitHub Actions, GitLab CI)
+
+### Agents — Enhancements
+- [ ] code-reviewer: Add project-specific lint rule checks
+- [ ] code-reviewer: Add Supabase RLS pattern validation
+- [ ] code-reviewer: Add Stripe webhook handler pattern checks
+- [ ] e2e-writer: Add Supabase auth helper fixtures
+- [ ] e2e-writer: Add visual regression testing patterns
+- [ ] e2e-writer: Add API mocking patterns with `page.route()`
+- [ ] e2e-writer: Add mobile viewport test templates
+- [ ] rls-tester: Add support for testing RLS with Supabase local dev (`supabase start`)
+- [ ] rls-tester: Add JWT generation helpers for test users
+- [ ] rls-tester: Add multi-tenant RLS pattern tests
+- [ ] rls-tester: Add policy performance checks (indexes on policy columns)
+- [ ] test-writer: Add Stripe webhook handler test templates
+- [ ] test-writer: Add Supabase RLS integration test patterns
+- [ ] test-writer: Add React component testing patterns with Testing Library
+- [ ] verifier: Add bundle size check (compare against baseline)
+- [ ] verifier: Add Lighthouse CI score check
+- [ ] verifier: Add database migration safety checks
+- [ ] verifier: Add environment variable validation
 - [ ] doc-generator: Add OpenAPI/Swagger generation from API routes
 - [ ] doc-generator: Add Storybook story generation for components
 - [ ] doc-generator: Add database ERD diagram generation
 - [ ] doc-generator: Add changelog generation from git history
+
+### Infrastructure
+- [ ] Add setup script for automated integration
+- [ ] Add CI workflow templates (GitHub Actions, GitLab CI)
