@@ -19,9 +19,6 @@ skills/                          # Skills that run in the main conversation cont
 
 templates/                       # Project templates
   CLAUDE.md                      # Starter CLAUDE.md for new projects
-
-docs/                            # Documentation
-  integration.md                 # How to integrate the toolkit into your projects
 ```
 
 ## Agents
@@ -89,21 +86,22 @@ This toolkit is built for projects using:
 git clone <this-repo-url> ~/claude-toolkit
 ```
 
-### 2. Integrate into your project
+### 2. Copy agents and skills into your project
 
-**Symlink agents + copy skills:**
 ```bash
-mkdir -p .claude/skills
+mkdir -p .claude/agents .claude/skills
 
-# Symlink agents (works fine)
-ln -s ~/claude-toolkit/agents .claude/agents
+# Copy agents
+cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/
+cp ~/claude-toolkit/agents/test-writer.md .claude/agents/
+cp ~/claude-toolkit/agents/verifier.md .claude/agents/
 
-# Copy skills individually (symlinks are broken for skills)
+# Copy skills (each is a directory)
 cp -r ~/claude-toolkit/skills/commit-push-pr .claude/skills/
 cp -r ~/claude-toolkit/skills/e2e .claude/skills/
 ```
 
-> **Note:** Do NOT symlink the `skills/` directory — Claude Code does not follow symlinks for skill discovery (open bug as of Dec 2025). Agents work fine with symlinks.
+> **Important:** Do NOT add `.claude/` to `.gitignore`. Agents and skills must be committed to your repo — they are required for Claude Code web sessions and CI.
 
 ### 3. Set up CLAUDE.md
 
@@ -112,31 +110,83 @@ cp ~/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
 # Edit CLAUDE.md and fill in the TODO sections
 ```
 
-See [docs/integration.md](docs/integration.md) for the full integration guide, including git submodule setup, CI configuration, and customization.
+## Customization
+
+### Extending Agents
+
+Copy an agent into your project and add project-specific rules:
+
+```bash
+cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/code-reviewer.md
+# Edit to add your project's rules
+```
+
+### Creating New Agents
+
+Agents are flat `.md` files in `.claude/agents/`:
+- **Frontmatter:** `name`, `description`, `tools` (list of allowed tools)
+- **Instructions:** Step-by-step behavior guide
+- **Output format:** Expected output structure
+
+### Creating New Skills
+
+Skills live in subdirectories: `.claude/skills/<name>/SKILL.md`:
+- **Frontmatter:** `name`, `description`, `allowed-tools` (note: `allowed-tools`, not `tools`)
+- **Instructions:** Step-by-step behavior guide
+
+### Project-Specific Overrides
+
+Override a toolkit agent by creating your own with the same name:
+
+```markdown
+---
+name: code-reviewer
+description: Project-specific code reviewer
+tools: [Glob, Grep, Read, Bash]
+---
+
+# Code Reviewer
+
+Follow the standard review process, with these additional project rules:
+
+- All API routes must use the `withAuth` middleware
+- Components in `components/ui/` must have Storybook stories
+- Database queries must use the query builder, not raw SQL
+```
 
 ## CI / Headless Mode
 
-Claude Code agents can run in CI pipelines (GitHub Actions, GitLab CI, etc.) for automated code review, test generation, and verification.
+Claude Code agents can run in CI pipelines for automated code review, test generation, and verification.
 
 ```yaml
-# Example: Run verifier on every PR
-# See docs/integration.md for full CI setup
-- run: claude --agent verifier --headless
+# .github/workflows/claude-review.yml
+name: Claude Code Review
+on: [pull_request]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Add Claude Code CLI installation step
+      # TODO: Add agent invocation step
+      # Example:
+      # - run: claude --agent code-reviewer --headless
 ```
 
 > See the [official Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code) for CLI installation and headless mode details.
-
-## Official Docs
-
-- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
-- [Claude Code Agents](https://docs.anthropic.com/en/docs/claude-code/agents)
-- [Claude Code GitHub](https://github.com/anthropics/claude-code)
 
 ## Project Conventions
 
 These filenames are recognized automatically by toolkit agents:
 
 - `docs/SCHEMA-SPEC.md` — Database schema specification. If present, agents like rls-tester will read it first for context. Recommended for any project with a non-trivial schema.
+
+## Official Docs
+
+- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
+- [Claude Code Agents](https://docs.anthropic.com/en/docs/claude-code/agents)
+- [Claude Code GitHub](https://github.com/anthropics/claude-code)
 
 ## TODO
 
