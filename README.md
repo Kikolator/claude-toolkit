@@ -196,3 +196,7 @@ These filenames are recognized automatically by toolkit agents:
 - [ ] Add accessibility audit agent
 - [ ] Add setup script for automated integration
 - [ ] Add CI workflow templates (GitHub Actions, GitLab CI)
+- [ ] doc-generator: Add OpenAPI/Swagger generation from API routes
+- [ ] doc-generator: Add Storybook story generation for components
+- [ ] doc-generator: Add database ERD diagram generation
+- [ ] doc-generator: Add changelog generation from git history

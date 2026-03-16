@@ -8,7 +8,6 @@ This repo is a personal Claude Code toolkit: reusable agents, skills, and templa
 agents/<name>.md                 # Sub-agents (flat .md files)
 skills/<name>/SKILL.md           # Skills (subdirectory with SKILL.md)
 templates/                       # Project templates (CLAUDE.md starter)
-docs/                            # Integration and usage documentation
 ```
 
 ## Frontmatter Conventions
