@@ -18,7 +18,8 @@ skills/                          # Skills that run in the main conversation cont
   e2e/SKILL.md                   # Runs Playwright E2E tests with smart defaults
 
 templates/                       # Project templates
-  CLAUDE.md                      # Starter CLAUDE.md for new projects
+  CLAUDE.md                      # Starter CLAUDE.md for app projects (Next.js + Supabase)
+  CLAUDE-marketing.md            # Starter CLAUDE.md for marketing/landing page projects
 ```
 
 ## Agents
@@ -106,7 +107,12 @@ cp -r ~/claude-toolkit/skills/e2e .claude/skills/
 ### 3. Set up CLAUDE.md
 
 ```bash
+# For app projects (Next.js + Supabase):
 cp ~/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
+
+# For marketing / landing page projects:
+cp ~/claude-toolkit/templates/CLAUDE-marketing.md ./CLAUDE.md
+
 # Edit CLAUDE.md and fill in the TODO sections
 ```
 
