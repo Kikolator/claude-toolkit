@@ -6,29 +6,58 @@ Reusable agents, skills, and templates for Claude Code — built for Next.js, Su
 
 ## Install
 
-Run this in your project directory:
+### Option A: From npm (after publishing)
+
+From your **project root**:
 
 ```bash
 npx claude-toolkit init
 ```
 
-That's it. This copies all agents and skills into `.claude/agents/` and `.claude/skills/`. Commit the `.claude/` directory to your repo — it's required for Claude Code Web and CI.
+### Option B: From a local clone (now)
+
+```bash
+# Clone once (anywhere on your machine)
+git clone https://github.com/Kikolator/claude-toolkit.git ~/claude-toolkit
+
+# From your project root, run the CLI
+cd ~/my-project
+node ~/claude-toolkit/bin/cli.mjs init
+```
+
+Both options copy all agents and skills into your project's `.claude/agents/` and `.claude/skills/`. **Commit the `.claude/` directory** — it's required for Claude Code Web and CI.
 
 ### Pick specific items
 
 ```bash
+node ~/claude-toolkit/bin/cli.mjs add code-reviewer silent-failure-hunter scaffold
+# or after npm publish:
 npx claude-toolkit add code-reviewer silent-failure-hunter scaffold
 ```
 
 ### Keep up to date
 
 ```bash
-npx claude-toolkit update     # refresh all installed items
-npx claude-toolkit diff        # check what's outdated or missing
-npx claude-toolkit list        # see everything available (✓ = installed)
+# Pull latest toolkit, then update your project
+cd ~/claude-toolkit && git pull
+cd ~/my-project && node ~/claude-toolkit/bin/cli.mjs update
+
+# Other commands
+node ~/claude-toolkit/bin/cli.mjs diff     # check what's outdated or missing
+node ~/claude-toolkit/bin/cli.mjs list     # see everything available (✓ = installed)
 ```
 
 > **Do NOT add `.claude/` to `.gitignore`.** Agents and skills must be committed for Claude Code Web sessions and CI to work.
+
+### Shell alias (optional)
+
+Add to your `~/.zshrc` to skip the full path:
+
+```bash
+alias ctk="node ~/claude-toolkit/bin/cli.mjs"
+```
+
+Then: `cd my-project && ctk init`
 
 ---
 
