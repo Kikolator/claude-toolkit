@@ -6,8 +6,10 @@ A personal Claude Code toolkit — reusable agents, skills, and templates for Ne
 
 ```
 agents/                          # Claude Code sub-agents (.claude/agents/ format)
+  accessibility-auditor.md       # Audits TSX components for a11y issues linters miss
   code-reviewer.md               # Reviews code for bugs, security, performance, conventions
   code-simplifier.md             # Simplifies recently modified code for clarity and consistency
+  migration-checker.md           # Reviews Supabase migration SQL for safety and data loss risks
   silent-failure-hunter.md       # Audits error handling for silent failures and hidden bugs
   test-plan-verifier.md          # Verifies PR test plans, runs tests, updates PR checkboxes
   test-writer.md                 # Generates Vitest unit and integration tests
@@ -31,8 +33,10 @@ Agents are sub-agents that Claude Code can spawn to handle specific tasks autono
 
 | Agent | Description | Invocation |
 |-------|-------------|------------|
+| **accessibility-auditor** | Audits TSX components for a11y issues linters miss — focus management, ARIA, keyboard nav, screen readers. | `@accessibility-auditor` or via Agent tool |
 | **code-reviewer** | Reviews diffs for bugs, security issues, performance problems, and convention violations. Confidence-filtered output (≥80 only). | `@code-reviewer` or via Agent tool |
 | **code-simplifier** | Simplifies recently modified code for clarity, consistency, and maintainability while preserving functionality. | `@code-simplifier` or via Agent tool |
+| **migration-checker** | Reviews Supabase migration SQL for destructive changes, data loss risks, locking, and RLS impact. | `@migration-checker` or via Agent tool |
 | **silent-failure-hunter** | Audits error handling for silent failures, empty catch blocks, hidden bugs, and missing error checks. | `@silent-failure-hunter` or via Agent tool |
 | **test-plan-verifier** | Reads a PR's test plan checklist, runs the tests, and updates the PR with pass/fail results. | `@test-plan-verifier` or via Agent tool |
 | **test-writer** | Generates Vitest tests following existing project patterns. Discovers conventions before writing. | `@test-writer` or via Agent tool |
@@ -49,8 +53,14 @@ Agents are sub-agents that Claude Code can spawn to handle specific tasks autono
 > Review the changes I just made
   → Claude spawns @code-reviewer
 
+> Audit the login form for accessibility
+  → Claude spawns @accessibility-auditor
+
 > Simplify the code I just wrote
   → Claude spawns @code-simplifier
+
+> Check this migration before I run it
+  → Claude spawns @migration-checker
 
 > Check the error handling in my API routes
   → Claude spawns @silent-failure-hunter
@@ -107,9 +117,11 @@ git clone <this-repo-url> ~/claude-toolkit
 ```bash
 mkdir -p .claude/agents .claude/skills
 
-# Copy agents
+# Copy agents (pick the ones you need)
+cp ~/claude-toolkit/agents/accessibility-auditor.md .claude/agents/
 cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/
 cp ~/claude-toolkit/agents/code-simplifier.md .claude/agents/
+cp ~/claude-toolkit/agents/migration-checker.md .claude/agents/
 cp ~/claude-toolkit/agents/silent-failure-hunter.md .claude/agents/
 cp ~/claude-toolkit/agents/test-plan-verifier.md .claude/agents/
 cp ~/claude-toolkit/agents/test-writer.md .claude/agents/
@@ -216,9 +228,9 @@ These filenames are recognized automatically by toolkit agents:
 
 ### Agents — New
 - [ ] Add pre-commit hook agent for automated review
-- [ ] Add migration safety checker agent
+- [x] Add migration safety checker agent
 - [ ] Add bundle analyzer agent
-- [ ] Add accessibility audit agent
+- [x] Add accessibility audit agent
 
 ### Agents — Enhancements
 - [ ] code-reviewer: Add project-specific lint rule checks
