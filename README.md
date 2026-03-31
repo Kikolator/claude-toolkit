@@ -1,118 +1,85 @@
 # claude-toolkit
 
-A personal Claude Code toolkit — reusable agents, skills, and templates for Next.js / Supabase / TypeScript projects.
+Reusable agents, skills, and templates for Claude Code — built for Next.js, Supabase, and TypeScript projects.
 
-## What's Inside
+14 agents, 4 skills. Zero dependencies.
 
+## Install
+
+Run this in your project directory:
+
+```bash
+npx claude-toolkit init
 ```
-agents/                          # Claude Code sub-agents (.claude/agents/ format)
-  accessibility-auditor.md       # Audits TSX components for a11y issues linters miss
-  code-reviewer.md               # Reviews code for bugs, security, performance, conventions
-  code-simplifier.md             # Simplifies recently modified code for clarity and consistency
-  comment-analyzer.md            # Catches comment rot, misleading docs, stale TODOs
-  dependency-auditor.md          # Audits deps for vulnerabilities, outdated, unused, licenses
-  migration-checker.md           # Reviews Supabase migration SQL for safety and data loss risks
-  silent-failure-hunter.md       # Audits error handling for silent failures and hidden bugs
-  test-plan-verifier.md          # Verifies PR test plans, runs tests, updates PR checkboxes
-  test-writer.md                 # Generates Vitest unit and integration tests
-  type-design-analyzer.md        # Evaluates TypeScript type design quality and invariants
-  rls-tester.md                  # Tests Supabase Row Level Security policies
-  e2e-writer.md                  # Generates Playwright end-to-end tests
-  doc-generator.md               # Generates project documentation from code
-  verifier.md                    # Runs type check, lint, tests, and build verification
 
-skills/                          # Skills that run in the main conversation context
-  commit-push-pr/SKILL.md        # Commits, pushes, and creates a GitHub PR
-  e2e/SKILL.md                   # Runs Playwright E2E tests with smart defaults
-  scaffold/SKILL.md              # Generates boilerplate from existing project conventions
+That's it. This copies all agents and skills into `.claude/agents/` and `.claude/skills/`. Commit the `.claude/` directory to your repo — it's required for Claude Code Web and CI.
 
-templates/                       # Project templates
-  CLAUDE.md                      # Starter CLAUDE.md for app projects (Next.js + Supabase)
-  CLAUDE-marketing.md            # Starter CLAUDE.md for marketing/landing page projects
+### Pick specific items
+
+```bash
+npx claude-toolkit add code-reviewer silent-failure-hunter scaffold
 ```
+
+### Keep up to date
+
+```bash
+npx claude-toolkit update     # refresh all installed items
+npx claude-toolkit diff        # check what's outdated or missing
+npx claude-toolkit list        # see everything available (✓ = installed)
+```
+
+> **Do NOT add `.claude/` to `.gitignore`.** Agents and skills must be committed for Claude Code Web sessions and CI to work.
+
+---
 
 ## Agents
 
-Agents are sub-agents that Claude Code can spawn to handle specific tasks autonomously. They run in isolation with their own tool permissions.
+Agents are sub-agents Claude Code spawns to handle tasks autonomously. Just ask in natural language — Claude picks the right agent.
 
-| Agent | Description | Invocation |
-|-------|-------------|------------|
-| **accessibility-auditor** | Audits TSX components for a11y issues linters miss — focus management, ARIA, keyboard nav, screen readers. | `@accessibility-auditor` or via Agent tool |
-| **code-reviewer** | Reviews diffs for bugs, security issues, performance problems, and convention violations. Confidence-filtered output (≥80 only). | `@code-reviewer` or via Agent tool |
-| **code-simplifier** | Simplifies recently modified code for clarity, consistency, and maintainability while preserving functionality. | `@code-simplifier` or via Agent tool |
-| **comment-analyzer** | Catches comment rot, misleading docstrings, stale TODOs, and factually incorrect documentation. | `@comment-analyzer` or via Agent tool |
-| **dependency-auditor** | Audits deps for vulnerabilities, outdated majors, unused packages, and license conflicts. | `@dependency-auditor` or via Agent tool |
-| **migration-checker** | Reviews Supabase migration SQL for destructive changes, data loss risks, locking, and RLS impact. | `@migration-checker` or via Agent tool |
-| **silent-failure-hunter** | Audits error handling for silent failures, empty catch blocks, hidden bugs, and missing error checks. | `@silent-failure-hunter` or via Agent tool |
-| **test-plan-verifier** | Reads a PR's test plan checklist, runs the tests, and updates the PR with pass/fail results. | `@test-plan-verifier` or via Agent tool |
-| **test-writer** | Generates Vitest tests following existing project patterns. Discovers conventions before writing. | `@test-writer` or via Agent tool |
-| **type-design-analyzer** | Evaluates TypeScript type definitions for encapsulation, invariants, and design quality with 1–10 ratings. | `@type-design-analyzer` or via Agent tool |
-| **rls-tester** | Tests Supabase RLS policies by simulating queries as different roles (anon, authenticated, service_role). | `@rls-tester` or via Agent tool |
-| **e2e-writer** | Generates Playwright E2E tests with stable selectors, proper waits, and CI compatibility. | `@e2e-writer` or via Agent tool |
-| **doc-generator** | Generates API docs, component docs, and architecture overviews from code analysis. | `@doc-generator` or via Agent tool |
-| **verifier** | Runs a full verification pipeline: tsc, lint, vitest, build, playwright. Reports pass/fail. | `@verifier` or via Agent tool |
+| Agent | What it does |
+|-------|-------------|
+| **code-reviewer** | Reviews diffs for bugs, security, performance, conventions. Confidence-filtered (≥80 only). |
+| **code-simplifier** | Simplifies recently modified code for clarity while preserving functionality. |
+| **silent-failure-hunter** | Audits error handling for silent failures, empty catch blocks, hidden bugs. |
+| **comment-analyzer** | Catches comment rot, misleading docstrings, stale TODOs. |
+| **type-design-analyzer** | Evaluates TypeScript type definitions with 1–10 ratings on invariants and encapsulation. |
+| **dependency-auditor** | Audits deps for vulnerabilities, outdated majors, unused packages, license conflicts. |
+| **accessibility-auditor** | Audits TSX for a11y issues linters miss — focus, ARIA, keyboard nav, screen readers. |
+| **migration-checker** | Reviews Supabase migration SQL for destructive changes, data loss, locking, RLS impact. |
+| **rls-tester** | Tests Supabase RLS policies by simulating queries as anon, authenticated, service_role. |
+| **test-writer** | Generates Vitest tests following existing project patterns. |
+| **e2e-writer** | Generates Playwright E2E tests with stable selectors, waits, CI compat. |
+| **test-plan-verifier** | Reads a PR's test plan, runs tests, updates PR checkboxes with pass/fail results. |
+| **doc-generator** | Generates API docs, component docs, and architecture overviews from code. |
+| **verifier** | Full verification pipeline: tsc, lint, vitest, build, playwright. Pass/fail report. |
 
-### Invocation Examples
+### Examples
 
 ```
-# In Claude Code conversation:
-
-> Review the changes I just made
-  → Claude spawns @code-reviewer
-
-> Audit the login form for accessibility
-  → Claude spawns @accessibility-auditor
-
-> Simplify the code I just wrote
-  → Claude spawns @code-simplifier
-
-> Check the comments I added are accurate
-  → Claude spawns @comment-analyzer
-
-> Audit our dependencies for vulnerabilities
-  → Claude spawns @dependency-auditor
-
-> Check this migration before I run it
-  → Claude spawns @migration-checker
-
-> Check the error handling in my API routes
-  → Claude spawns @silent-failure-hunter
-
-> Review the types I added in this PR
-  → Claude spawns @type-design-analyzer
-
-> Verify the test plan on PR #42
-  → Claude spawns @test-plan-verifier
-
-> Write tests for src/lib/auth.ts
-  → Claude spawns @test-writer
-
-> Check the RLS policies on the profiles table
-  → Claude spawns @rls-tester
-
-> Write E2E tests for the login flow
-  → Claude spawns @e2e-writer
-
-> Generate API docs for all routes
-  → Claude spawns @doc-generator
-
-> Verify everything passes before I merge
-  → Claude spawns @verifier
+> Review the changes I just made           → @code-reviewer
+> Check the error handling in my API routes → @silent-failure-hunter
+> Audit the login form for accessibility    → @accessibility-auditor
+> Check this migration before I run it      → @migration-checker
+> Write tests for src/lib/auth.ts           → @test-writer
+> Verify everything passes before I merge   → @verifier
 ```
 
 ## Skills
 
-Skills run in the main conversation context (not as sub-agents) and have access to the full conversation history.
+Skills run in the main conversation context with full conversation history.
 
-| Skill | Description | Invocation |
+| Skill | What it does | Invocation |
 |-------|-------------|------------|
-| **commit-push-pr** | Stages, commits, pushes, and creates a PR with structured description. | `/commit-push-pr` |
-| **e2e** | Runs Playwright tests with smart defaults. | `/e2e`, `/e2e login.spec.ts`, `/e2e "checkout"` |
-| **scaffold** | Generates boilerplate by reading existing project code as the template. | `/scaffold api-route users`, `/scaffold component UserCard` |
+| **commit-push-pr** | Stages, commits, pushes, creates a PR with structured description. | `/commit-push-pr` |
+| **e2e** | Runs Playwright tests with smart defaults. | `/e2e`, `/e2e login.spec.ts` |
+| **scaffold** | Generates boilerplate from existing project conventions. | `/scaffold api-route users` |
+| **wrap-up** | Saves session context as a handoff file for the next Claude session. | `/wrap-up` |
 
-## Stack Assumptions
+---
 
-This toolkit is built for projects using:
+## Stack
+
+This toolkit is built for:
 
 - **Next.js** (App Router) — server components, server actions, API routes
 - **Supabase** — PostgreSQL, Auth, RLS, Storage
@@ -121,85 +88,11 @@ This toolkit is built for projects using:
 - **Playwright** — end-to-end testing
 - **Stripe** — payment processing (optional)
 
-## Quick Start
-
-### Install all agents & skills
-
-```bash
-npx claude-toolkit init
-```
-
-This copies all agents and skills into `.claude/agents/` and `.claude/skills/`. Commit the `.claude/` directory — it's required for Claude Code Web and CI.
-
-### Install specific items only
-
-```bash
-npx claude-toolkit add code-reviewer silent-failure-hunter scaffold
-```
-
-### Update to latest
-
-```bash
-npx claude-toolkit update
-```
-
-Shows what was added, updated, or unchanged.
-
-### Check for updates
-
-```bash
-npx claude-toolkit diff
-```
-
-### List everything available
-
-```bash
-npx claude-toolkit list
-```
-
-Shows all agents and skills with ✓ markers for installed items.
-
-### Set up CLAUDE.md (optional)
-
-```bash
-# For app projects (Next.js + Supabase):
-cp node_modules/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
-
-# For marketing / landing page projects:
-cp node_modules/claude-toolkit/templates/CLAUDE-marketing.md ./CLAUDE.md
-
-# Edit CLAUDE.md and fill in the TODO sections
-```
-
-> **Important:** Do NOT add `.claude/` to `.gitignore`. Agents and skills must be committed to your repo — they are required for Claude Code Web sessions and CI.
-
 ## Customization
 
-### Extending Agents
+### Override an agent
 
-Copy an agent into your project and add project-specific rules:
-
-```bash
-cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/code-reviewer.md
-# Edit to add your project's rules
-```
-
-### Creating New Agents
-
-Agents are flat `.md` files in `.claude/agents/`:
-- **Frontmatter:** `name`, `description`, `tools` (list of allowed tools)
-- **Instructions:** Step-by-step behavior guide
-- **Output format:** Expected output structure
-
-### Creating New Skills
-
-Skills live in subdirectories: `.claude/skills/<name>/SKILL.md`:
-- **Frontmatter:** `name`, `description`, `allowed-tools` (note: `allowed-tools`, not `tools`)
-- **Instructions:** Step-by-step behavior guide
-
-### Project-Specific Overrides
-
-Override a toolkit agent by creating your own with the same name:
+Agents installed via `npx claude-toolkit init` are regular files in `.claude/agents/`. Edit them directly to add project-specific rules:
 
 ```markdown
 ---
@@ -208,8 +101,6 @@ description: Project-specific code reviewer
 tools: [Glob, Grep, Read, Bash]
 ---
 
-# Code Reviewer
-
 Follow the standard review process, with these additional project rules:
 
 - All API routes must use the `withAuth` middleware
@@ -217,35 +108,61 @@ Follow the standard review process, with these additional project rules:
 - Database queries must use the query builder, not raw SQL
 ```
 
-## CI / Headless Mode
+Running `npx claude-toolkit update` will overwrite your changes. If you've customized an agent, back it up or skip the update for that file.
 
-Claude Code agents can run in CI pipelines for automated code review, test generation, and verification.
+### Create new agents
+
+Agents are `.md` files with YAML frontmatter in `.claude/agents/`:
 
 ```yaml
-# .github/workflows/claude-review.yml
-name: Claude Code Review
-on: [pull_request]
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # TODO: Add Claude Code CLI installation step
-      # TODO: Add agent invocation step
-      # Example:
-      # - run: claude --agent code-reviewer --headless
+---
+name: my-agent
+description: What this agent does
+tools: [Read, Grep, Glob, Bash]
+---
 ```
 
-> See the [official Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code) for CLI installation and headless mode details.
+### Create new skills
+
+Skills are `SKILL.md` files in subdirectories under `.claude/skills/`:
+
+```yaml
+---
+name: my-skill
+description: What this skill does
+allowed-tools: [Bash, Read]   # note: allowed-tools, not tools
+---
+```
+
+## CLAUDE.md Templates
+
+Starter templates for your project's `CLAUDE.md`:
+
+```bash
+# App project (Next.js + Supabase):
+cp node_modules/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
+
+# Marketing / landing page project:
+cp node_modules/claude-toolkit/templates/CLAUDE-marketing.md ./CLAUDE.md
+```
 
 ## Project Conventions
 
 These filenames are recognized automatically by toolkit agents:
 
-- `docs/SCHEMA-SPEC.md` — Database schema specification. If present, agents like rls-tester will read it first for context. Recommended for any project with a non-trivial schema.
+- `docs/SCHEMA-SPEC.md` — Database schema spec. Agents like rls-tester and migration-checker read it for context.
 
-## Official Docs
+## Repository Structure
+
+```
+agents/              14 agent definitions (.md files)
+skills/              4 skill definitions (subdirs with SKILL.md)
+templates/           CLAUDE.md starter templates
+bin/cli.mjs          npx CLI (zero dependencies)
+package.json         npm package config
+```
+
+## Links
 
 - [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
 - [Claude Code Agents](https://docs.anthropic.com/en/docs/claude-code/agents)
@@ -254,35 +171,36 @@ These filenames are recognized automatically by toolkit agents:
 ## TODO
 
 ### Agents — New
-- [ ] Add pre-commit hook agent for automated review
-- [x] Add migration safety checker agent
-- [ ] Add bundle analyzer agent
-- [x] Add accessibility audit agent
+- [ ] Pre-commit hook agent for automated review
+- [ ] Bundle analyzer agent
+- [x] Migration safety checker agent
+- [x] Accessibility audit agent
 
 ### Agents — Enhancements
-- [ ] code-reviewer: Add project-specific lint rule checks
-- [ ] code-reviewer: Add Supabase RLS pattern validation
-- [ ] code-reviewer: Add Stripe webhook handler pattern checks
-- [ ] e2e-writer: Add Supabase auth helper fixtures
-- [ ] e2e-writer: Add visual regression testing patterns
-- [ ] e2e-writer: Add API mocking patterns with `page.route()`
-- [ ] e2e-writer: Add mobile viewport test templates
-- [ ] rls-tester: Add support for testing RLS with Supabase local dev (`supabase start`)
-- [ ] rls-tester: Add JWT generation helpers for test users
-- [ ] rls-tester: Add multi-tenant RLS pattern tests
-- [ ] rls-tester: Add policy performance checks (indexes on policy columns)
-- [ ] test-writer: Add Stripe webhook handler test templates
-- [ ] test-writer: Add Supabase RLS integration test patterns
-- [ ] test-writer: Add React component testing patterns with Testing Library
-- [ ] verifier: Add bundle size check (compare against baseline)
-- [ ] verifier: Add Lighthouse CI score check
-- [ ] verifier: Add database migration safety checks
-- [ ] verifier: Add environment variable validation
-- [ ] doc-generator: Add OpenAPI/Swagger generation from API routes
-- [ ] doc-generator: Add Storybook story generation for components
-- [ ] doc-generator: Add database ERD diagram generation
-- [ ] doc-generator: Add changelog generation from git history
+- [ ] code-reviewer: Project-specific lint rule checks
+- [ ] code-reviewer: Supabase RLS pattern validation
+- [ ] code-reviewer: Stripe webhook handler pattern checks
+- [ ] e2e-writer: Supabase auth helper fixtures
+- [ ] e2e-writer: Visual regression testing patterns
+- [ ] e2e-writer: API mocking patterns with `page.route()`
+- [ ] e2e-writer: Mobile viewport test templates
+- [ ] rls-tester: Testing with Supabase local dev (`supabase start`)
+- [ ] rls-tester: JWT generation helpers for test users
+- [ ] rls-tester: Multi-tenant RLS pattern tests
+- [ ] rls-tester: Policy performance checks (indexes on policy columns)
+- [ ] test-writer: Stripe webhook handler test templates
+- [ ] test-writer: Supabase RLS integration test patterns
+- [ ] test-writer: React component testing patterns with Testing Library
+- [ ] verifier: Bundle size check (compare against baseline)
+- [ ] verifier: Lighthouse CI score check
+- [ ] verifier: Database migration safety checks
+- [ ] verifier: Environment variable validation
+- [ ] doc-generator: OpenAPI/Swagger generation from API routes
+- [ ] doc-generator: Storybook story generation for components
+- [ ] doc-generator: Database ERD diagram generation
+- [ ] doc-generator: Changelog generation from git history
 
 ### Infrastructure
-- [x] Add setup script for automated integration (`npx claude-toolkit init`)
-- [ ] Add CI workflow templates (GitHub Actions, GitLab CI)
+- [x] Setup script for automated integration (`npx claude-toolkit init`)
+- [ ] CI workflow templates (GitHub Actions, GitLab CI)
+- [ ] Claude Code Plugin for marketplace distribution
