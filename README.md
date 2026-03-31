@@ -7,6 +7,7 @@ A personal Claude Code toolkit — reusable agents, skills, and templates for Ne
 ```
 agents/                          # Claude Code sub-agents (.claude/agents/ format)
   code-reviewer.md               # Reviews code for bugs, security, performance, conventions
+  silent-failure-hunter.md       # Audits error handling for silent failures and hidden bugs
   test-writer.md                 # Generates Vitest unit and integration tests
   rls-tester.md                  # Tests Supabase Row Level Security policies
   e2e-writer.md                  # Generates Playwright end-to-end tests
@@ -28,7 +29,8 @@ Agents are sub-agents that Claude Code can spawn to handle specific tasks autono
 
 | Agent | Description | Invocation |
 |-------|-------------|------------|
-| **code-reviewer** | Reviews diffs for bugs, security issues, performance problems, and convention violations. Confidence-filtered output. | `@code-reviewer` or via Agent tool |
+| **code-reviewer** | Reviews diffs for bugs, security issues, performance problems, and convention violations. Confidence-filtered output (≥80 only). | `@code-reviewer` or via Agent tool |
+| **silent-failure-hunter** | Audits error handling for silent failures, empty catch blocks, hidden bugs, and missing error checks. | `@silent-failure-hunter` or via Agent tool |
 | **test-writer** | Generates Vitest tests following existing project patterns. Discovers conventions before writing. | `@test-writer` or via Agent tool |
 | **rls-tester** | Tests Supabase RLS policies by simulating queries as different roles (anon, authenticated, service_role). | `@rls-tester` or via Agent tool |
 | **e2e-writer** | Generates Playwright E2E tests with stable selectors, proper waits, and CI compatibility. | `@e2e-writer` or via Agent tool |
@@ -42,6 +44,9 @@ Agents are sub-agents that Claude Code can spawn to handle specific tasks autono
 
 > Review the changes I just made
   → Claude spawns @code-reviewer
+
+> Check the error handling in my API routes
+  → Claude spawns @silent-failure-hunter
 
 > Write tests for src/lib/auth.ts
   → Claude spawns @test-writer
@@ -94,6 +99,7 @@ mkdir -p .claude/agents .claude/skills
 
 # Copy agents
 cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/
+cp ~/claude-toolkit/agents/silent-failure-hunter.md .claude/agents/
 cp ~/claude-toolkit/agents/test-writer.md .claude/agents/
 cp ~/claude-toolkit/agents/verifier.md .claude/agents/
 
