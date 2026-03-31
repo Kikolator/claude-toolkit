@@ -24,6 +24,7 @@ agents/                          # Claude Code sub-agents (.claude/agents/ forma
 skills/                          # Skills that run in the main conversation context
   commit-push-pr/SKILL.md        # Commits, pushes, and creates a GitHub PR
   e2e/SKILL.md                   # Runs Playwright E2E tests with smart defaults
+  scaffold/SKILL.md              # Generates boilerplate from existing project conventions
 
 templates/                       # Project templates
   CLAUDE.md                      # Starter CLAUDE.md for app projects (Next.js + Supabase)
@@ -107,6 +108,7 @@ Skills run in the main conversation context (not as sub-agents) and have access 
 |-------|-------------|------------|
 | **commit-push-pr** | Stages, commits, pushes, and creates a PR with structured description. | `/commit-push-pr` |
 | **e2e** | Runs Playwright tests with smart defaults. | `/e2e`, `/e2e login.spec.ts`, `/e2e "checkout"` |
+| **scaffold** | Generates boilerplate by reading existing project code as the template. | `/scaffold api-route users`, `/scaffold component UserCard` |
 
 ## Stack Assumptions
 
