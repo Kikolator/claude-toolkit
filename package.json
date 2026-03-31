@@ -1,0 +1,35 @@
+{
+  "name": "claude-toolkit",
+  "version": "1.0.0",
+  "description": "Reusable agents, skills, and templates for Claude Code — Next.js, Supabase, TypeScript",
+  "type": "module",
+  "bin": {
+    "claude-toolkit": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin/",
+    "agents/",
+    "skills/",
+    "templates/"
+  ],
+  "keywords": [
+    "claude-code",
+    "claude",
+    "agents",
+    "skills",
+    "nextjs",
+    "supabase",
+    "typescript",
+    "code-review",
+    "testing"
+  ],
+  "author": "Nic Pijpers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kikolator/claude-toolkit.git"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -123,38 +123,55 @@ This toolkit is built for projects using:
 
 ## Quick Start
 
-### 1. Clone the toolkit
+### Install all agents & skills
 
 ```bash
-git clone <this-repo-url> ~/claude-toolkit
+npx claude-toolkit init
 ```
 
-### 2. Copy agents and skills into your project
+This copies all agents and skills into `.claude/agents/` and `.claude/skills/`. Commit the `.claude/` directory — it's required for Claude Code Web and CI.
+
+### Install specific items only
 
 ```bash
-mkdir -p .claude/agents .claude/skills
-
-# Copy agents (pick the ones you need)
-cp ~/claude-toolkit/agents/*.md .claude/agents/
-
-# Copy skills (each is a directory)
-cp -r ~/claude-toolkit/skills/commit-push-pr .claude/skills/
-cp -r ~/claude-toolkit/skills/e2e .claude/skills/
+npx claude-toolkit add code-reviewer silent-failure-hunter scaffold
 ```
 
-> **Important:** Do NOT add `.claude/` to `.gitignore`. Agents and skills must be committed to your repo — they are required for Claude Code web sessions and CI.
+### Update to latest
 
-### 3. Set up CLAUDE.md
+```bash
+npx claude-toolkit update
+```
+
+Shows what was added, updated, or unchanged.
+
+### Check for updates
+
+```bash
+npx claude-toolkit diff
+```
+
+### List everything available
+
+```bash
+npx claude-toolkit list
+```
+
+Shows all agents and skills with ✓ markers for installed items.
+
+### Set up CLAUDE.md (optional)
 
 ```bash
 # For app projects (Next.js + Supabase):
-cp ~/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
+cp node_modules/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
 
 # For marketing / landing page projects:
-cp ~/claude-toolkit/templates/CLAUDE-marketing.md ./CLAUDE.md
+cp node_modules/claude-toolkit/templates/CLAUDE-marketing.md ./CLAUDE.md
 
 # Edit CLAUDE.md and fill in the TODO sections
 ```
+
+> **Important:** Do NOT add `.claude/` to `.gitignore`. Agents and skills must be committed to your repo — they are required for Claude Code Web sessions and CI.
 
 ## Customization
 
@@ -267,5 +284,5 @@ These filenames are recognized automatically by toolkit agents:
 - [ ] doc-generator: Add changelog generation from git history
 
 ### Infrastructure
-- [ ] Add setup script for automated integration
+- [x] Add setup script for automated integration (`npx claude-toolkit init`)
 - [ ] Add CI workflow templates (GitHub Actions, GitLab CI)
