@@ -9,10 +9,13 @@ agents/                          # Claude Code sub-agents (.claude/agents/ forma
   accessibility-auditor.md       # Audits TSX components for a11y issues linters miss
   code-reviewer.md               # Reviews code for bugs, security, performance, conventions
   code-simplifier.md             # Simplifies recently modified code for clarity and consistency
+  comment-analyzer.md            # Catches comment rot, misleading docs, stale TODOs
+  dependency-auditor.md          # Audits deps for vulnerabilities, outdated, unused, licenses
   migration-checker.md           # Reviews Supabase migration SQL for safety and data loss risks
   silent-failure-hunter.md       # Audits error handling for silent failures and hidden bugs
   test-plan-verifier.md          # Verifies PR test plans, runs tests, updates PR checkboxes
   test-writer.md                 # Generates Vitest unit and integration tests
+  type-design-analyzer.md        # Evaluates TypeScript type design quality and invariants
   rls-tester.md                  # Tests Supabase Row Level Security policies
   e2e-writer.md                  # Generates Playwright end-to-end tests
   doc-generator.md               # Generates project documentation from code
@@ -36,10 +39,13 @@ Agents are sub-agents that Claude Code can spawn to handle specific tasks autono
 | **accessibility-auditor** | Audits TSX components for a11y issues linters miss — focus management, ARIA, keyboard nav, screen readers. | `@accessibility-auditor` or via Agent tool |
 | **code-reviewer** | Reviews diffs for bugs, security issues, performance problems, and convention violations. Confidence-filtered output (≥80 only). | `@code-reviewer` or via Agent tool |
 | **code-simplifier** | Simplifies recently modified code for clarity, consistency, and maintainability while preserving functionality. | `@code-simplifier` or via Agent tool |
+| **comment-analyzer** | Catches comment rot, misleading docstrings, stale TODOs, and factually incorrect documentation. | `@comment-analyzer` or via Agent tool |
+| **dependency-auditor** | Audits deps for vulnerabilities, outdated majors, unused packages, and license conflicts. | `@dependency-auditor` or via Agent tool |
 | **migration-checker** | Reviews Supabase migration SQL for destructive changes, data loss risks, locking, and RLS impact. | `@migration-checker` or via Agent tool |
 | **silent-failure-hunter** | Audits error handling for silent failures, empty catch blocks, hidden bugs, and missing error checks. | `@silent-failure-hunter` or via Agent tool |
 | **test-plan-verifier** | Reads a PR's test plan checklist, runs the tests, and updates the PR with pass/fail results. | `@test-plan-verifier` or via Agent tool |
 | **test-writer** | Generates Vitest tests following existing project patterns. Discovers conventions before writing. | `@test-writer` or via Agent tool |
+| **type-design-analyzer** | Evaluates TypeScript type definitions for encapsulation, invariants, and design quality with 1–10 ratings. | `@type-design-analyzer` or via Agent tool |
 | **rls-tester** | Tests Supabase RLS policies by simulating queries as different roles (anon, authenticated, service_role). | `@rls-tester` or via Agent tool |
 | **e2e-writer** | Generates Playwright E2E tests with stable selectors, proper waits, and CI compatibility. | `@e2e-writer` or via Agent tool |
 | **doc-generator** | Generates API docs, component docs, and architecture overviews from code analysis. | `@doc-generator` or via Agent tool |
@@ -59,11 +65,20 @@ Agents are sub-agents that Claude Code can spawn to handle specific tasks autono
 > Simplify the code I just wrote
   → Claude spawns @code-simplifier
 
+> Check the comments I added are accurate
+  → Claude spawns @comment-analyzer
+
+> Audit our dependencies for vulnerabilities
+  → Claude spawns @dependency-auditor
+
 > Check this migration before I run it
   → Claude spawns @migration-checker
 
 > Check the error handling in my API routes
   → Claude spawns @silent-failure-hunter
+
+> Review the types I added in this PR
+  → Claude spawns @type-design-analyzer
 
 > Verify the test plan on PR #42
   → Claude spawns @test-plan-verifier
@@ -118,14 +133,7 @@ git clone <this-repo-url> ~/claude-toolkit
 mkdir -p .claude/agents .claude/skills
 
 # Copy agents (pick the ones you need)
-cp ~/claude-toolkit/agents/accessibility-auditor.md .claude/agents/
-cp ~/claude-toolkit/agents/code-reviewer.md .claude/agents/
-cp ~/claude-toolkit/agents/code-simplifier.md .claude/agents/
-cp ~/claude-toolkit/agents/migration-checker.md .claude/agents/
-cp ~/claude-toolkit/agents/silent-failure-hunter.md .claude/agents/
-cp ~/claude-toolkit/agents/test-plan-verifier.md .claude/agents/
-cp ~/claude-toolkit/agents/test-writer.md .claude/agents/
-cp ~/claude-toolkit/agents/verifier.md .claude/agents/
+cp ~/claude-toolkit/agents/*.md .claude/agents/
 
 # Copy skills (each is a directory)
 cp -r ~/claude-toolkit/skills/commit-push-pr .claude/skills/
