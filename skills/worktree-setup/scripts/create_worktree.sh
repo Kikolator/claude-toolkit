@@ -4,11 +4,17 @@
 # origin default branch, in a sibling <repo-name>.worktrees/ directory.
 #
 # Usage:
-#   create_worktree.sh <branch-name> [--base <branch>] [--install] [--no-env-copy]
+#   create_worktree.sh <branch-name> [--base <branch>] [--install] [--clone-deps]
+#                      [--deps-from <path>] [--no-env-copy] [--rebase]
 #
 #   <branch-name>   Full branch name incl. type prefix, e.g. feat/47-webhook-retries
 #   --base <b>      Base branch to fork from (default: origin's default branch)
 #   --install       Run the detected package-manager install in the new worktree
+#   --clone-deps    Copy-on-write clone node_modules from an existing checkout
+#                   (APFS clonefile / reflink) instead of installing — near-zero
+#                   extra disk, ideal on disk-constrained machines. Supersedes
+#                   --install when both are given.
+#   --deps-from <p> Source checkout to clone deps from (default: the main worktree)
 #   --no-env-copy   Skip copying gitignored top-level .env* files into the worktree
 #   --rebase        Rebase a reused branch onto the base ref (rewrites history;
 #                   only do this on a branch that isn't shared/pushed-and-pulled)
@@ -25,6 +31,12 @@
 #       * if the fetch failed, freshness is reported as UNKNOWN, loudly.
 #   - Copies gitignored top-level .env* files from the source checkout (they are
 #     absent from a fresh worktree, which is the usual first-run breakage).
+#   - Places the worktree in <repo>.worktrees/ next to the MAIN checkout even when
+#     run from inside another worktree (the repo name is taken from the main
+#     worktree, not the current directory).
+#   - With --clone-deps, clones node_modules copy-on-write from an existing
+#     checkout instead of installing, so a fresh worktree is runnable without
+#     spending a full node_modules of disk per branch.
 #   - Prints a machine-readable SUMMARY block at the end, incl. a freshness line.
 
 set -euo pipefail
@@ -36,11 +48,15 @@ DO_INSTALL=0
 COPY_ENV=1
 DO_REBASE=0
 FETCH_OK=0
+CLONE_DEPS=0
+DEPS_SRC=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --base)        BASE="${2:-}"; shift 2 ;;
     --install)     DO_INSTALL=1; shift ;;
+    --clone-deps)  CLONE_DEPS=1; shift ;;
+    --deps-from)   DEPS_SRC="${2:-}"; shift 2 ;;
     --no-env-copy) COPY_ENV=0; shift ;;
     --rebase)      DO_REBASE=1; shift ;;
     -h|--help)     grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -59,8 +75,16 @@ if ! REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   echo "error: not inside a git repository. cd into the repo first." >&2
   exit 1
 fi
-REPO_NAME="$(basename "$REPO_ROOT")"
-PARENT_DIR="$(dirname "$REPO_ROOT")"
+# Anchor the repo name and the sibling .worktrees/ dir on the MAIN worktree (the
+# first entry of `git worktree list`), not the current checkout. Run from inside a
+# worktree, `git rev-parse --show-toplevel` returns that worktree, which would nest
+# new worktrees under <worktree>.worktrees/ instead of the shared <repo>.worktrees/
+# sibling. REPO_ROOT stays the current checkout so env files are still copied from
+# where the user is working.
+MAIN_ROOT="$(git worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p' | head -n1)"
+[ -n "$MAIN_ROOT" ] || MAIN_ROOT="$REPO_ROOT"
+REPO_NAME="$(basename "$MAIN_ROOT")"
+PARENT_DIR="$(dirname "$MAIN_ROOT")"
 WORKTREES_DIR="${PARENT_DIR}/${REPO_NAME}.worktrees"
 WORKTREE_PATH="${WORKTREES_DIR}/${BRANCH}"
 
@@ -216,6 +240,40 @@ if [ "$COPY_ENV" -eq 1 ]; then
   done < <(git -C "$REPO_ROOT" ls-files --others --ignored --exclude-standard --directory -z 2>/dev/null || true)
 fi
 
+# ---- optional dependency clone (copy-on-write) ------------------------------
+# A fresh `npm install` per worktree is slow and costs a full node_modules of disk
+# (~1 GB+ in a monorepo); several in parallel on a near-full disk can exhaust it.
+# --clone-deps instead clones node_modules from an existing checkout using APFS
+# clonefile (macOS) or reflink (Btrfs/XFS) — copy-on-write, so near-zero extra disk
+# and near-instant. It clones the root plus every workspace node_modules (apps/*,
+# packages/*), since monorepos hold per-workspace installs too. Workspace and .bin
+# symlinks are relative, so they resolve inside the new worktree.
+CLONED_DEPS="no"
+if [ "$CLONE_DEPS" -eq 1 ]; then
+  DEPS_SRC="${DEPS_SRC:-$MAIN_ROOT}"
+  if [ ! -d "${DEPS_SRC}/node_modules" ]; then
+    echo "warning: --clone-deps: no node_modules found at ${DEPS_SRC}; nothing cloned" >&2
+    CLONED_DEPS="skipped — no node_modules at ${DEPS_SRC}"
+  else
+    _n=0
+    while IFS= read -r _nm; do
+      _rel="${_nm#"${DEPS_SRC}"/}"
+      _dst="${WORKTREE_PATH}/${_rel}"
+      [ -e "$_dst" ] && continue
+      mkdir -p "$(dirname "$_dst")"
+      # Prefer copy-on-write; fall back to a plain recursive copy off APFS/reflink.
+      if cp -cR "$_nm" "$_dst" 2>/dev/null \
+         || cp -R --reflink=auto "$_nm" "$_dst" 2>/dev/null \
+         || cp -R "$_nm" "$_dst" 2>/dev/null; then
+        _n=$((_n + 1))
+      else
+        echo "warning: failed to clone ${_rel}" >&2
+      fi
+    done < <(find "$DEPS_SRC" -maxdepth 3 -type d -name node_modules -not -path '*/node_modules/*' 2>/dev/null)
+    CLONED_DEPS="yes — ${_n} tree(s) from ${DEPS_SRC}"
+  fi
+fi
+
 # ---- optional dependency install --------------------------------------------
 INSTALL_CMD=""
 if   [ -f "${WORKTREE_PATH}/pnpm-lock.yaml" ];  then INSTALL_CMD="pnpm install"
@@ -225,7 +283,9 @@ elif [ -f "${WORKTREE_PATH}/package-lock.json" ]; then INSTALL_CMD="npm install"
 fi
 
 INSTALLED="no"
-if [ "$DO_INSTALL" -eq 1 ] && [ -n "$INSTALL_CMD" ]; then
+if [ "$DO_INSTALL" -eq 1 ] && [ "$CLONE_DEPS" -eq 1 ]; then
+  echo "note: --clone-deps supersedes --install; skipping install" >&2
+elif [ "$DO_INSTALL" -eq 1 ] && [ -n "$INSTALL_CMD" ]; then
   echo "installing dependencies: $INSTALL_CMD"
   ( cd "$WORKTREE_PATH" && eval "$INSTALL_CMD" ) && INSTALLED="yes" || echo "warning: install failed" >&2
 fi
@@ -241,6 +301,7 @@ freshness:     ${FRESHNESS}
 sync:          ${SYNC_ACTION}
 worktree:      ${WORKTREE_PATH}
 env copied:    ${COPIED_ENV:-none found}
+deps cloned:   ${CLONED_DEPS}
 install cmd:   ${INSTALL_CMD:-none detected}
 installed:     ${INSTALLED}
 cd:            cd "${WORKTREE_PATH}"

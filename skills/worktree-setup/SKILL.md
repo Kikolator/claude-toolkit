@@ -30,8 +30,10 @@ carrying over the gitignored `.env*` files that always break a fresh checkout.
 
 ## Prerequisites
 
-- Run from **inside the target repo's working tree** (the script infers repo name
-  and default branch from there). If the user isn't in a repo, ask which one.
+- Run from **inside the target repo's working tree** (the script infers the repo
+  and default branch from there; the repo name and worktree location are anchored
+  on the main worktree, so running from inside another worktree is fine). If the
+  user isn't in a repo, ask which one.
 - `git` ≥ 2.5 (worktree support). A JS package manager is only needed if the user
   wants dependencies installed.
 
@@ -97,7 +99,7 @@ Branch: `chore/eslint-config-cleanup`
 Run the bundled script from inside the repo:
 
 ```bash
-scripts/create_worktree.sh <branch-name> [--base <branch>] [--install] [--no-env-copy]
+scripts/create_worktree.sh <branch-name> [--base <branch>] [--install] [--clone-deps] [--deps-from <path>] [--no-env-copy]
 ```
 
 - No `--base` → forks from origin's default branch (resolved via
@@ -121,6 +123,17 @@ scripts/create_worktree.sh <branch-name> [--base <branch>] [--install] [--no-env
 - Dependencies: pass `--install` to run the detected package manager
   (`pnpm`/`bun`/`yarn`/`npm`, chosen by lockfile) inside the new worktree. Default
   is off; the script reports the command it *would* run so the user can decide.
+- Copy-on-write deps: on a disk-constrained machine, prefer `--clone-deps` over
+  `--install`. It clones `node_modules` (the root plus every workspace tree) from
+  an existing checkout using APFS clonefile / reflink — near-zero extra disk and
+  near-instant, versus ~1 GB+ and a full resolve per worktree. It clones from the
+  main worktree by default; use `--deps-from <path>` to point at a specific
+  checkout (whose lockfile should match — which holds when both forked from the
+  same fresh base). `--clone-deps` supersedes `--install` if both are passed, and
+  the summary reports a `deps cloned:` line.
+- Placement: the worktree always lands in `<repo>.worktrees/` next to the **main**
+  checkout, even when you run the script from inside another worktree — the repo
+  name is taken from the main worktree, not the current directory.
 
 The script reuses an existing local or remote branch of the same name instead of
 failing, and refuses to clobber an existing worktree path.
@@ -150,9 +163,13 @@ that quietly sits two commits behind `main` produces merge conflicts and
 "works-on-my-branch" bugs that cost far more than the ten seconds it takes to
 mention it here.
 
-Decide whether to pass `--install` based on the user's intent: if they said "and
-get it running" or the repo needs deps to do anything useful, install; if they
-just want the branch, skip it and surface the install command in your reply.
+Decide whether to make the worktree runnable based on the user's intent: if they
+said "and get it running" or the repo needs deps to do anything useful, pass
+`--clone-deps` (copy-on-write clone from the main checkout — cheap enough to be the
+default when deps are needed) or `--install` for a clean resolve; if they just want
+the branch, skip both and surface the install command in your reply. On a near-full
+disk, avoid `--install` — a full `node_modules` per worktree can exhaust it — and
+use `--clone-deps`.
 
 ### 5. Report
 
