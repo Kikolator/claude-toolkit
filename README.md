@@ -1,8 +1,8 @@
 # claude-toolkit
 
-Reusable agents, skills, and templates for Claude Code — built for Next.js, Supabase, and TypeScript projects.
+Reusable subagents and CLAUDE.md templates for Claude Code — built for Next.js, Supabase, and TypeScript projects.
 
-14 agents, 4 skills. Zero dependencies.
+14 subagents. Zero dependencies. (Skills live in `skills/` and are installed with [`npx skills`](https://github.com/vercel-labs/skills), not this CLI.)
 
 ## Install
 
@@ -25,29 +25,32 @@ cd ~/my-project
 node ~/claude-toolkit/bin/cli.mjs init
 ```
 
-Both options copy all agents and skills into your project's `.claude/agents/` and `.claude/skills/`. **Commit the `.claude/` directory** — it's required for Claude Code Web and CI.
+Both options copy all subagents into your project's `.claude/agents/`. **Commit the `.claude/` directory** — it's required for Claude Code Web and CI. (Skills are installed separately with [`npx skills`](https://github.com/vercel-labs/skills).)
 
 ### Pick specific items
 
 ```bash
-node ~/claude-toolkit/bin/cli.mjs add code-reviewer silent-failure-hunter scaffold
+node ~/claude-toolkit/bin/cli.mjs add code-reviewer silent-failure-hunter test-writer
 # or after npm publish:
-npx claude-toolkit add code-reviewer silent-failure-hunter scaffold
+npx claude-toolkit add code-reviewer silent-failure-hunter test-writer
 ```
 
 ### Keep up to date
 
 ```bash
-# Pull latest toolkit, then update your project
+# Pull latest toolkit, then update your project's subagents
 cd ~/claude-toolkit && git pull
 cd ~/my-project && node ~/claude-toolkit/bin/cli.mjs update
 
 # Other commands
 node ~/claude-toolkit/bin/cli.mjs diff     # check what's outdated or missing
-node ~/claude-toolkit/bin/cli.mjs list     # see everything available (✓ = installed)
+node ~/claude-toolkit/bin/cli.mjs list     # see all available agents (✓ = installed)
+
+# Skills are separate — update those with the vercel-labs skills CLI:
+npx skills update
 ```
 
-> **Do NOT add `.claude/` to `.gitignore`.** Agents and skills must be committed for Claude Code Web sessions and CI to work.
+> **Do NOT add `.claude/` to `.gitignore`.** Subagents (and skills) must be committed for Claude Code Web sessions and CI to work.
 
 ### Shell alias (optional)
 
@@ -95,14 +98,17 @@ Agents are sub-agents Claude Code spawns to handle tasks autonomously. Just ask 
 
 ## Skills
 
-Skills run in the main conversation context with full conversation history.
+Skills are **not installed by this CLI** — they moved to the [`skills`](https://github.com/vercel-labs/skills) CLI (`npx skills`), which supports local, GitHub, and well-known sources and tracks them in a `skills-lock.json`. This repo's `skills/` directory is a **local source** those installs can point at.
 
-| Skill | What it does | Invocation |
-|-------|-------------|------------|
-| **commit-push-pr** | Stages, commits, pushes, creates a PR with structured description. | `/commit-push-pr` |
-| **e2e** | Runs Playwright tests with smart defaults. | `/e2e`, `/e2e login.spec.ts` |
-| **scaffold** | Generates boilerplate from existing project conventions. | `/scaffold api-route users` |
-| **wrap-up** | Saves session context as a handoff file for the next Claude session. | `/wrap-up` |
+```bash
+# From your project root
+npx skills add <owner/repo>                              # a GitHub-hosted skill
+npx skills add /path/to/claude-toolkit/skills/<name>     # a skill from this repo
+npx skills update                                        # refresh installed skills
+npx skills list
+```
+
+This toolkit's own skills (e.g. `issue-to-pr`, `worktree-setup`, `issue-release-planner`) live under `skills/` and are consumed that way.
 
 ---
 
@@ -153,7 +159,7 @@ tools: [Read, Grep, Glob, Bash]
 
 ### Create new skills
 
-Skills are `SKILL.md` files in subdirectories under `.claude/skills/`:
+Add a `skills/<name>/SKILL.md` to this repo, then install it into a project with [`npx skills`](https://github.com/vercel-labs/skills) (this CLI no longer installs skills):
 
 ```yaml
 ---
@@ -184,10 +190,10 @@ These filenames are recognized automatically by toolkit agents:
 ## Repository Structure
 
 ```
-agents/              14 agent definitions (.md files)
-skills/              4 skill definitions (subdirs with SKILL.md)
+agents/              14 subagent definitions (.md files) — installed by bin/cli.mjs
+skills/              skill sources (subdirs with SKILL.md) — installed via `npx skills`
 templates/           CLAUDE.md starter templates
-bin/cli.mjs          npx CLI (zero dependencies)
+bin/cli.mjs          npx CLI for subagents (zero dependencies)
 package.json         npm package config
 ```
 

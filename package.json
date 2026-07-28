@@ -1,7 +1,7 @@
 {
   "name": "claude-toolkit",
   "version": "1.0.0",
-  "description": "Reusable agents, skills, and templates for Claude Code — Next.js, Supabase, TypeScript",
+  "description": "Reusable Claude Code subagents and CLAUDE.md templates (skills → npx skills) — Next.js, Supabase, TypeScript",
   "type": "module",
   "bin": {
     "claude-toolkit": "./bin/cli.mjs"

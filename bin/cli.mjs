@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 
-import { readdir, readFile, mkdir, copyFile, cp, stat, lstat, realpath } from "node:fs/promises";
-import { join, dirname, basename, resolve } from "node:path";
+import { readdir, readFile, mkdir, copyFile } from "node:fs/promises";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TOOLKIT_ROOT = resolve(__dirname, "..");
 const AGENTS_DIR = join(TOOLKIT_ROOT, "agents");
-const SKILLS_DIR = join(TOOLKIT_ROOT, "skills");
-const TEMPLATES_DIR = join(TOOLKIT_ROOT, "templates");
 
 const TARGET_AGENTS = join(process.cwd(), ".claude", "agents");
-const TARGET_SKILLS = join(process.cwd(), ".claude", "skills");
+
+// Skills are NOT managed here. They moved to the vercel-labs `skills` CLI
+// (`npx skills`), which supports local/github/well-known sources and a
+// skills-lock.json. This CLI distributes subagents only — the one thing
+// `npx skills` does not do. Keeping the two concerns in separate tools avoids
+// the drift you get when two installers write the same files.
 
 // Colors (no dependencies)
 const bold = (s) => `\x1b[1m${s}\x1b[0m`;
@@ -53,20 +56,14 @@ async function init(args) {
   console.log(bold("\nclaude-toolkit init\n"));
 
   await mkdir(TARGET_AGENTS, { recursive: true });
-  await mkdir(TARGET_SKILLS, { recursive: true });
 
   const agents = await getAgents();
-  const skills = await getSkills();
-
-  const filtered = filter
-    ? { agents: agents.filter((a) => filter.includes(a.name)), skills: skills.filter((s) => filter.includes(s.name)) }
-    : { agents, skills };
+  const filtered = filter ? agents.filter((a) => filter.includes(a.name)) : agents;
 
   let added = 0;
   let skipped = 0;
 
-  // Copy agents
-  for (const agent of filtered.agents) {
+  for (const agent of filtered) {
     const target = join(TARGET_AGENTS, agent.file);
     if (existsSync(target)) {
       console.log(dim(`  skip  ${agent.file} (already exists)`));
@@ -78,27 +75,14 @@ async function init(args) {
     }
   }
 
-  // Copy skills
-  for (const skill of filtered.skills) {
-    const target = join(TARGET_SKILLS, skill.name);
-    if (existsSync(target)) {
-      console.log(dim(`  skip  ${skill.name}/ (already exists)`));
-      skipped++;
-    } else {
-      await cp(skill.path, await resolveTargetDir(target), { recursive: true });
-      console.log(green(`  add   ${skill.name}/`));
-      added++;
-    }
-  }
-
-  console.log(
-    `\n${green(`${added} added`)}, ${dim(`${skipped} skipped`)}\n`
-  );
+  console.log(`\n${green(`${added} added`)}, ${dim(`${skipped} skipped`)}\n`);
 
   if (added > 0) {
     console.log(dim("Commit .claude/ to your repo for Claude Code Web support."));
     console.log(dim("Run `claude-toolkit update` later to refresh.\n"));
   }
+
+  console.log(dim("Skills are managed separately — see `npx skills`.\n"));
 }
 
 async function update() {
@@ -110,13 +94,11 @@ async function update() {
   }
 
   const agents = await getAgents();
-  const skills = await getSkills();
 
   let updated = 0;
   let unchanged = 0;
   let added = 0;
 
-  // Update agents
   await mkdir(TARGET_AGENTS, { recursive: true });
   for (const agent of agents) {
     const target = join(TARGET_AGENTS, agent.file);
@@ -137,63 +119,34 @@ async function update() {
     }
   }
 
-  // Update skills
-  await mkdir(TARGET_SKILLS, { recursive: true });
-  for (const skill of skills) {
-    const target = join(TARGET_SKILLS, skill.name, "SKILL.md");
-    const targetDir = join(TARGET_SKILLS, skill.name);
-    if (!existsSync(target)) {
-      await cp(skill.path, await resolveTargetDir(targetDir), { recursive: true });
-      console.log(green(`  add   ${skill.name}/`));
-      added++;
-    } else {
-      const source = await readFile(join(skill.path, "SKILL.md"), "utf-8");
-      const current = await readFile(target, "utf-8");
-      if (source !== current) {
-        await cp(skill.path, await resolveTargetDir(targetDir), { recursive: true });
-        console.log(yellow(`  update ${skill.name}/`));
-        updated++;
-      } else {
-        unchanged++;
-      }
-    }
-  }
-
   console.log(
     `\n${green(`${added} added`)}, ${yellow(`${updated} updated`)}, ${dim(`${unchanged} unchanged`)}\n`
   );
+
+  console.log(dim("Skills are managed separately — run `npx skills update` for those.\n"));
 }
 
 async function add(args) {
   if (args.length === 0) {
     console.error(red("Usage: claude-toolkit add <name> [name...]"));
-    console.error(dim("Example: claude-toolkit add code-reviewer silent-failure-hunter scaffold"));
+    console.error(dim("Example: claude-toolkit add code-reviewer silent-failure-hunter"));
     process.exit(1);
   }
 
   console.log(bold("\nclaude-toolkit add\n"));
 
   await mkdir(TARGET_AGENTS, { recursive: true });
-  await mkdir(TARGET_SKILLS, { recursive: true });
-
   const agents = await getAgents();
-  const skills = await getSkills();
 
   for (const name of args) {
     const agent = agents.find((a) => a.name === name);
-    const skill = skills.find((s) => s.name === name);
-
     if (agent) {
       const target = join(TARGET_AGENTS, agent.file);
       await copyFile(agent.path, target);
       console.log(green(`  add   agents/${agent.file}`));
-    } else if (skill) {
-      const target = join(TARGET_SKILLS, skill.name);
-      await cp(skill.path, await resolveTargetDir(target), { recursive: true });
-      console.log(green(`  add   skills/${skill.name}/`));
     } else {
       console.error(red(`  not found: ${name}`));
-      console.error(dim(`  Run 'claude-toolkit list' to see available items.`));
+      console.error(dim(`  Run 'claude-toolkit list' to see available agents (skills → npx skills).`));
     }
   }
 
@@ -209,7 +162,6 @@ async function diff() {
   }
 
   const agents = await getAgents();
-  const skills = await getSkills();
 
   let newer = 0;
   let missing = 0;
@@ -232,23 +184,6 @@ async function diff() {
     }
   }
 
-  for (const skill of skills) {
-    const target = join(TARGET_SKILLS, skill.name, "SKILL.md");
-    if (!existsSync(target)) {
-      console.log(cyan(`  missing  ${skill.name}/`));
-      missing++;
-    } else {
-      const source = await readFile(join(skill.path, "SKILL.md"), "utf-8");
-      const cur = await readFile(target, "utf-8");
-      if (source !== cur) {
-        console.log(yellow(`  outdated ${skill.name}/`));
-        newer++;
-      } else {
-        current++;
-      }
-    }
-  }
-
   console.log(
     `\n${current} current, ${yellow(`${newer} outdated`)}, ${cyan(`${missing} missing`)}\n`
   );
@@ -259,10 +194,9 @@ async function diff() {
 }
 
 async function list() {
-  console.log(bold("\nclaude-toolkit — available agents & skills\n"));
+  console.log(bold("\nclaude-toolkit — available agents\n"));
 
   const agents = await getAgents();
-  const skills = await getSkills();
 
   console.log(bold("Agents:"));
   for (const agent of agents) {
@@ -272,55 +206,35 @@ async function list() {
     console.log(`  ${marker} ${bold(agent.name.padEnd(24))} ${dim(desc)}`);
   }
 
-  console.log(bold("\nSkills:"));
-  for (const skill of skills) {
-    const desc = await getDescription(join(skill.path, "SKILL.md"));
-    const installed = existsSync(join(TARGET_SKILLS, skill.name, "SKILL.md"));
-    const marker = installed ? green("✓") : dim("·");
-    console.log(`  ${marker} ${bold(skill.name.padEnd(24))} ${dim(desc)}`);
-  }
-
-  console.log(dim("\n✓ = installed in current project\n"));
+  console.log(dim("\n✓ = installed in current project"));
+  console.log(dim("Skills are managed separately — see `npx skills`.\n"));
 }
 
 function help() {
   console.log(`
-${bold("claude-toolkit")} — agents & skills for Claude Code
+${bold("claude-toolkit")} — subagents for Claude Code
 
 ${bold("Usage:")}
-  claude-toolkit ${cyan("init")}              Copy all agents & skills into .claude/
-  claude-toolkit ${cyan("init")} --only a,b   Copy only specific agents/skills
-  claude-toolkit ${cyan("update")}            Refresh installed agents & skills
-  claude-toolkit ${cyan("add")} <name...>     Add specific agents or skills
+  claude-toolkit ${cyan("init")}              Copy all agents into .claude/agents/
+  claude-toolkit ${cyan("init")} --only a,b   Copy only specific agents
+  claude-toolkit ${cyan("update")}            Refresh installed agents
+  claude-toolkit ${cyan("add")} <name...>     Add specific agents
   claude-toolkit ${cyan("diff")}              Show what's outdated or missing
-  claude-toolkit ${cyan("list")}              List all available agents & skills
+  claude-toolkit ${cyan("list")}              List all available agents
   claude-toolkit ${cyan("help")}              Show this help
+
+${bold("Skills")} are managed separately with ${cyan("npx skills")} (vercel-labs/skills) —
+this CLI distributes subagents only.
 
 ${bold("Examples:")}
   npx claude-toolkit init
-  npx claude-toolkit add code-reviewer silent-failure-hunter scaffold
+  npx claude-toolkit add code-reviewer silent-failure-hunter
   npx claude-toolkit update
   npx claude-toolkit diff
 `);
 }
 
 // ── Helpers ───────────────────────────────────────────────
-
-// Resolve a skill's install directory through symlinks. Projects that keep the
-// canonical skills in .agents/skills/ and symlink .claude/skills/<name> to them
-// would otherwise fail here: fs.cp() can't overwrite a symlink with a directory
-// (EISDIR). Following the link and copying into the real dir keeps both views in
-// sync. A missing/broken target falls back to the path as-is (a fresh real dir).
-async function resolveTargetDir(targetDir) {
-  try {
-    if ((await lstat(targetDir)).isSymbolicLink()) {
-      return await realpath(targetDir);
-    }
-  } catch {
-    // target doesn't exist yet — use the path as-is
-  }
-  return targetDir;
-}
 
 async function getAgents() {
   const files = await readdir(AGENTS_DIR);
@@ -331,18 +245,6 @@ async function getAgents() {
       name: f.replace(".md", ""),
       file: f,
       path: join(AGENTS_DIR, f),
-    }));
-}
-
-async function getSkills() {
-  const entries = await readdir(SKILLS_DIR, { withFileTypes: true });
-  return entries
-    .filter((e) => e.isDirectory())
-    .filter((e) => existsSync(join(SKILLS_DIR, e.name, "SKILL.md")))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((e) => ({
-      name: e.name,
-      path: join(SKILLS_DIR, e.name),
     }));
 }
 

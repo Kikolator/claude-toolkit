@@ -56,6 +56,8 @@ These are different fields — `tools:` for agents, `allowed-tools:` for skills.
 2. Write instructions in the body
 3. Update `README.md` with the new skill
 
+Skills are installed into projects with [`npx skills`](https://github.com/vercel-labs/skills) (this repo's `skills/` dir is a source), **not** the toolkit CLI — which handles subagents only.
+
 ## Testing Changes
 
 Symlink into a test project to verify Claude Code discovers the agents/skills:
