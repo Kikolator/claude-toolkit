@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readdir, readFile, mkdir, copyFile, cp, stat } from "node:fs/promises";
+import { readdir, readFile, mkdir, copyFile, cp, stat, lstat, realpath } from "node:fs/promises";
 import { join, dirname, basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
@@ -85,7 +85,7 @@ async function init(args) {
       console.log(dim(`  skip  ${skill.name}/ (already exists)`));
       skipped++;
     } else {
-      await cp(skill.path, target, { recursive: true });
+      await cp(skill.path, await resolveTargetDir(target), { recursive: true });
       console.log(green(`  add   ${skill.name}/`));
       added++;
     }
@@ -143,14 +143,14 @@ async function update() {
     const target = join(TARGET_SKILLS, skill.name, "SKILL.md");
     const targetDir = join(TARGET_SKILLS, skill.name);
     if (!existsSync(target)) {
-      await cp(skill.path, targetDir, { recursive: true });
+      await cp(skill.path, await resolveTargetDir(targetDir), { recursive: true });
       console.log(green(`  add   ${skill.name}/`));
       added++;
     } else {
       const source = await readFile(join(skill.path, "SKILL.md"), "utf-8");
       const current = await readFile(target, "utf-8");
       if (source !== current) {
-        await cp(skill.path, targetDir, { recursive: true });
+        await cp(skill.path, await resolveTargetDir(targetDir), { recursive: true });
         console.log(yellow(`  update ${skill.name}/`));
         updated++;
       } else {
@@ -189,7 +189,7 @@ async function add(args) {
       console.log(green(`  add   agents/${agent.file}`));
     } else if (skill) {
       const target = join(TARGET_SKILLS, skill.name);
-      await cp(skill.path, target, { recursive: true });
+      await cp(skill.path, await resolveTargetDir(target), { recursive: true });
       console.log(green(`  add   skills/${skill.name}/`));
     } else {
       console.error(red(`  not found: ${name}`));
@@ -305,6 +305,22 @@ ${bold("Examples:")}
 }
 
 // ── Helpers ───────────────────────────────────────────────
+
+// Resolve a skill's install directory through symlinks. Projects that keep the
+// canonical skills in .agents/skills/ and symlink .claude/skills/<name> to them
+// would otherwise fail here: fs.cp() can't overwrite a symlink with a directory
+// (EISDIR). Following the link and copying into the real dir keeps both views in
+// sync. A missing/broken target falls back to the path as-is (a fresh real dir).
+async function resolveTargetDir(targetDir) {
+  try {
+    if ((await lstat(targetDir)).isSymbolicLink()) {
+      return await realpath(targetDir);
+    }
+  } catch {
+    // target doesn't exist yet — use the path as-is
+  }
+  return targetDir;
+}
 
 async function getAgents() {
   const files = await readdir(AGENTS_DIR);
