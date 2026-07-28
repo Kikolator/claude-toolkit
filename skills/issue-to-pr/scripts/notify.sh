@@ -39,10 +39,14 @@ notified=0
 if command -v terminal-notifier >/dev/null 2>&1; then
   terminal-notifier -title "$TITLE" -message "$MESSAGE" -sound Glass >/dev/null 2>&1 && notified=1
 elif [[ "$(uname -s)" == "Darwin" ]] && command -v osascript >/dev/null 2>&1; then
-  # Escape double quotes for AppleScript.
-  esc_title=${TITLE//\"/\\\"}
-  esc_msg=${MESSAGE//\"/\\\"}
-  osascript -e "display notification \"${esc_msg}\" with title \"${esc_title}\" sound name \"Glass\"" >/dev/null 2>&1 && notified=1
+  # Pass the title/message as AppleScript arguments (via `on run argv`) rather
+  # than interpolating them into the script text — string interpolation would let
+  # a crafted title/message inject AppleScript. `--` separates them from osascript.
+  osascript \
+    -e 'on run argv' \
+    -e 'display notification (item 2 of argv) with title (item 1 of argv) sound name "Glass"' \
+    -e 'end run' \
+    -- "$TITLE" "$MESSAGE" >/dev/null 2>&1 && notified=1
 elif command -v notify-send >/dev/null 2>&1; then
   if [[ $URGENT -eq 1 ]]; then
     notify-send -u critical "$TITLE" "$MESSAGE" >/dev/null 2>&1 && notified=1
