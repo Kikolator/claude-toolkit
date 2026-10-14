@@ -1,0 +1,42 @@
+{
+  "skill_name": "test-pr",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you verify the test plan on PR 496? Cap it at medium effort, and don't write anything to GitHub — dry run, just show me the report.",
+      "expected_output": "Resolves PR #496, extracts the 6-item test plan, classifies tiers correctly (3 checked automated items; the guest-referral claim as static; two staging checkouts as runtime), honors the medium ceiling by listing runtime items as not-verified/above-ceiling rather than attempting or silently skipping them, and produces the report table with tier + result + evidence per item without calling gh pr edit or gh pr comment. (Target any open PR with a mixed-tier plan; earlier targets merged mid-eval.)",
+      "assertions": [
+        "Report covers all 6 test plan items of PR #496 (unit suite, tsc, lint, guest-referral static claim, guest staging checkout, authenticated staging checkout)",
+        "The two staging checkout items are classified as runtime-tier and explicitly reported as not verified under the medium cap — neither attempted nor silently omitted",
+        "The guest-referral metadata claim is recognized as statically verifiable (code-read) rather than requiring a running app",
+        "Automated-tier claims are backed by evidence (a command actually run with its result, or explicitly marked as trusting the author's checked box)",
+        "Report is structured per-item with a clear result status for each",
+        "No GitHub writes: PR description checkboxes unchanged and no verification-report comment posted"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "is PR 485 ready to merge? check its test plan, low effort only, dry run",
+      "expected_output": "Applies the low ceiling (static tier only): verifies what can be proven by reading the diff/code, runs no commands beyond gh reads, explicitly lists automated/runtime items as 'not verified — above effort ceiling' rather than silently skipping, and gives a merge-readiness verdict grounded only in what was actually verified.",
+      "assertions": [
+        "The low ceiling is honored: verification limited to reading code/diff; no pass claimed from commands the run executed itself",
+        "Automated/runtime items are explicitly listed as not verified / above ceiling with what it would take to verify them",
+        "Merge-readiness verdict is grounded only in what was actually verified",
+        "No GitHub writes to PR #485"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "run /test-pr against PR 135 in dry-run mode",
+      "expected_output": "Detects that PR #135 is MERGED and stops without attempting verification or any writes, reporting that merged PRs are not edited.",
+      "assertions": [
+        "Detects PR #135 is MERGED and declines to verify or update it",
+        "No verification work performed on the merged PR",
+        "No GitHub writes to PR #135"
+      ],
+      "files": []
+    }
+  ]
+}

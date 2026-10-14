@@ -1,120 +1,124 @@
 # claude-toolkit
 
-Reusable subagents and CLAUDE.md templates for Claude Code — built for Next.js, Supabase, and TypeScript projects.
+A Claude Code **plugin marketplace** — Nic Pijpers' reusable skills, subagents, and `CLAUDE.md` templates for Next.js / Supabase / TypeScript work.
 
-14 subagents. Zero dependencies. (Skills live in `skills/` and are installed with [`npx skills`](https://github.com/vercel-labs/skills), not this CLI.)
+Two plugins, 8 skills, 14 subagents, zero dependencies.
 
 ## Install
 
-### Option A: From npm (after publishing)
-
-From your **project root**:
+Add the marketplace once per machine, then install what you need:
 
 ```bash
-npx claude-toolkit init
+claude plugin marketplace add Kikolator/claude-toolkit
+claude plugin install nic-core@claude-toolkit
+claude plugin install nic-nextjs-supabase@claude-toolkit   # only on Next.js + Supabase projects
 ```
 
-### Option B: From a local clone (now)
-
-```bash
-# Clone once (anywhere on your machine)
-git clone https://github.com/Kikolator/claude-toolkit.git ~/claude-toolkit
-
-# From your project root, run the CLI
-cd ~/my-project
-node ~/claude-toolkit/bin/cli.mjs init
-```
-
-Both options copy all subagents into your project's `.claude/agents/`. **Commit the `.claude/` directory** — it's required for Claude Code Web and CI. (Skills are installed separately with [`npx skills`](https://github.com/vercel-labs/skills).)
-
-### Pick specific items
-
-```bash
-node ~/claude-toolkit/bin/cli.mjs add code-reviewer silent-failure-hunter test-writer
-# or after npm publish:
-npx claude-toolkit add code-reviewer silent-failure-hunter test-writer
-```
+Installs are **user-scoped by default**, so every project on the machine picks them up — no per-repo setup, nothing to commit into `.claude/`. Pass `-s project` instead if you want a plugin pinned to one repo and shared with collaborators.
 
 ### Keep up to date
 
 ```bash
-# Pull latest toolkit, then update your project's subagents
-cd ~/claude-toolkit && git pull
-cd ~/my-project && node ~/claude-toolkit/bin/cli.mjs update
-
-# Other commands
-node ~/claude-toolkit/bin/cli.mjs diff     # check what's outdated or missing
-node ~/claude-toolkit/bin/cli.mjs list     # see all available agents (✓ = installed)
-
-# Skills are separate — update those with the vercel-labs skills CLI:
-npx skills update
+claude plugin marketplace update claude-toolkit
+claude plugin update nic-core
 ```
 
-> **Do NOT add `.claude/` to `.gitignore`.** Subagents (and skills) must be committed for Claude Code Web sessions and CI to work.
+A restart applies the update. Pushing to this repo's `main` is the release.
 
-### Shell alias (optional)
-
-Add to your `~/.zshrc` to skip the full path:
+### Other commands
 
 ```bash
-alias ctk="node ~/claude-toolkit/bin/cli.mjs"
+claude plugin list                  # what's installed
+claude plugin details nic-core      # component inventory + projected token cost
+claude plugin disable nic-core      # turn off without uninstalling
+claude plugin uninstall nic-core
 ```
 
-Then: `cd my-project && ctk init`
+### Try before installing
+
+Load a plugin for one session straight from a clone, without touching any config:
+
+```bash
+claude --plugin-dir /path/to/claude-toolkit/plugins
+```
+
+A directory named `plugins` loads every child, so that picks up both.
 
 ---
 
-## Agents
+## Plugins
 
-Agents are sub-agents Claude Code spawns to handle tasks autonomously. Just ask in natural language — Claude picks the right agent.
+### `nic-core` — stack-agnostic
+
+Workflow and review tooling that applies to any repo. ~1.6k always-on tokens.
+
+**Skills**
+
+| Skill | What it does |
+|-------|-------------|
+| **worktree-setup** | Creates a git worktree on a conventionally-named branch off the latest origin default branch, in a sibling `reponame.worktrees/` dir. |
+| **issue-to-pr** | Takes a GitHub issue end to end: worktree, implement, open PR, independent review, act on findings, work the test plan, notify you when it needs you. |
+| **issue-release-planner** | Turns open GitHub issues into a sequenced implementation and release plan, batched by PR and classified by semver impact. |
+| **commit-push-pr** | Commits staged changes, pushes, and opens a PR with a structured description. |
+| **wrap-up** | Saves session context to a `WRAP_UP.md` handoff for the next session. |
+
+**Agents**
+
+| Agent | What it does |
+|-------|-------------|
+| **code-simplifier** | Simplifies recently modified code for clarity while preserving functionality. |
+| **comment-analyzer** | Catches comment rot, misleading docstrings, stale TODOs. |
+| **type-design-analyzer** | Evaluates TypeScript type definitions with 1–10 ratings on invariants and encapsulation. |
+| **dependency-auditor** | Audits deps for vulnerabilities, outdated majors, unused packages, license conflicts. |
+| **doc-generator** | Generates API docs, component docs, and architecture overviews from code. |
+| **verifier** | Full verification pipeline: tsc, lint, vitest, build, playwright. Pass/fail report. |
+
+### `nic-nextjs-supabase` — stack-specific
+
+Next.js, Supabase, Vitest, and Playwright specifics. ~1.1k always-on tokens.
+
+**Skills**
+
+| Skill | What it does |
+|-------|-------------|
+| **scaffold** | Generates boilerplate from existing project code as the template: api-route, server-action, component, page, supabase-table, webhook. |
+| **e2e** | Runs Playwright E2E tests with smart defaults — all, one file, or a grep pattern. |
+| **test-pr** | Verifies a PR's test plan end to end, ticks off passing items in the description, and posts a results comment. |
+
+**Agents**
 
 | Agent | What it does |
 |-------|-------------|
 | **code-reviewer** | Reviews diffs for bugs, security, performance, conventions. Confidence-filtered (≥80 only). |
-| **code-simplifier** | Simplifies recently modified code for clarity while preserving functionality. |
 | **silent-failure-hunter** | Audits error handling for silent failures, empty catch blocks, hidden bugs. |
-| **comment-analyzer** | Catches comment rot, misleading docstrings, stale TODOs. |
-| **type-design-analyzer** | Evaluates TypeScript type definitions with 1–10 ratings on invariants and encapsulation. |
-| **dependency-auditor** | Audits deps for vulnerabilities, outdated majors, unused packages, license conflicts. |
 | **accessibility-auditor** | Audits TSX for a11y issues linters miss — focus, ARIA, keyboard nav, screen readers. |
 | **migration-checker** | Reviews Supabase migration SQL for destructive changes, data loss, locking, RLS impact. |
 | **rls-tester** | Tests Supabase RLS policies by simulating queries as anon, authenticated, service_role. |
 | **test-writer** | Generates Vitest tests following existing project patterns. |
 | **e2e-writer** | Generates Playwright E2E tests with stable selectors, waits, CI compat. |
 | **test-plan-verifier** | Reads a PR's test plan, runs tests, updates PR checkboxes with pass/fail results. |
-| **doc-generator** | Generates API docs, component docs, and architecture overviews from code. |
-| **verifier** | Full verification pipeline: tsc, lint, vitest, build, playwright. Pass/fail report. |
 
 ### Examples
 
+Just ask in natural language — Claude picks the right skill or agent.
+
 ```
-> Review the changes I just made           → @code-reviewer
-> Check the error handling in my API routes → @silent-failure-hunter
-> Audit the login form for accessibility    → @accessibility-auditor
-> Check this migration before I run it      → @migration-checker
-> Write tests for src/lib/auth.ts           → @test-writer
-> Verify everything passes before I merge   → @verifier
+> Spin up a worktree for the webhook work    → worktree-setup
+> Take issue #42                             → issue-to-pr
+> What should I work on first?               → issue-release-planner
+> Review the changes I just made             → code-reviewer
+> Check the error handling in my API routes  → silent-failure-hunter
+> Check this migration before I run it       → migration-checker
+> Write tests for src/lib/auth.ts            → test-writer
+> Test PR 486                                → test-pr
+> Verify everything passes before I merge    → verifier
 ```
-
-## Skills
-
-Skills are **not installed by this CLI** — they moved to the [`skills`](https://github.com/vercel-labs/skills) CLI (`npx skills`), which supports local, GitHub, and well-known sources and tracks them in a `skills-lock.json`. This repo's `skills/` directory is a **local source** those installs can point at.
-
-```bash
-# From your project root
-npx skills add <owner/repo>                              # a GitHub-hosted skill
-npx skills add /path/to/claude-toolkit/skills/<name>     # a skill from this repo
-npx skills update                                        # refresh installed skills
-npx skills list
-```
-
-This toolkit's own skills (e.g. `issue-to-pr`, `worktree-setup`, `issue-release-planner`) live under `skills/` and are consumed that way.
 
 ---
 
 ## Stack
 
-This toolkit is built for:
+The `nic-nextjs-supabase` plugin assumes:
 
 - **Next.js** (App Router) — server components, server actions, API routes
 - **Supabase** — PostgreSQL, Auth, RLS, Storage
@@ -123,84 +127,70 @@ This toolkit is built for:
 - **Playwright** — end-to-end testing
 - **Stripe** — payment processing (optional)
 
+`nic-core` assumes only git and `gh`.
+
 ## Customization
 
-### Override an agent
+Plugin files are read-only in place — don't edit them under `~/.claude/plugins/`, an update will overwrite them. Two better options:
 
-Agents installed via `npx claude-toolkit init` are regular files in `.claude/agents/`. Edit them directly to add project-specific rules:
+**Add project rules in `CLAUDE.md`.** A plugin agent still reads the project's `CLAUDE.md`, so repo-specific conventions belong there, not in a forked agent.
 
-```markdown
----
-name: code-reviewer
-description: Project-specific code reviewer
-tools: [Glob, Grep, Read, Bash]
----
+**Keep a project-local variant.** For a genuinely different version, put it in the project's own `.claude/skills/` or `.claude/agents/` under a *distinct name* — two components sharing a name is ambiguous, and the local one stops getting updates either way.
 
-Follow the standard review process, with these additional project rules:
+To change a component for every project, edit it here and push — that's what the marketplace is for.
 
-- All API routes must use the `withAuth` middleware
-- Components in `components/ui/` must have Storybook stories
-- Database queries must use the query builder, not raw SQL
+### Adding a skill or agent
+
+```
+plugins/<plugin>/skills/<name>/SKILL.md     # allowed-tools:
+plugins/<plugin>/agents/<name>.md           # tools:
 ```
 
-Running `npx claude-toolkit update` will overwrite your changes. If you've customized an agent, back it up or skip the update for that file.
+Note the frontmatter fields differ — `allowed-tools:` for skills, `tools:` for agents. Then:
 
-### Create new agents
-
-Agents are `.md` files with YAML frontmatter in `.claude/agents/`:
-
-```yaml
----
-name: my-agent
-description: What this agent does
-tools: [Read, Grep, Glob, Bash]
----
+```bash
+claude plugin validate plugins/<plugin>                 # manifest
+claude plugin validate plugins/<plugin>/skills          # frontmatter
+claude --plugin-dir plugins plugin details <plugin>     # confirm discovery + token cost
 ```
 
-### Create new skills
+A plugin dir can also hold `commands/`, `hooks/`, and an `.mcp.json` if you need them later.
 
-Add a `skills/<name>/SKILL.md` to this repo, then install it into a project with [`npx skills`](https://github.com/vercel-labs/skills) (this CLI no longer installs skills):
+### Releasing
 
-```yaml
----
-name: my-skill
-description: What this skill does
-allowed-tools: [Bash, Read]   # note: allowed-tools, not tools
----
+```bash
+claude plugin tag plugins/<plugin>    # cuts <name>--v<version>, checks manifest/marketplace agree
 ```
 
 ## CLAUDE.md Templates
 
-Starter templates for your project's `CLAUDE.md`:
+Not shipped by a plugin — copy them by hand from a clone:
 
 ```bash
-# App project (Next.js + Supabase):
-cp node_modules/claude-toolkit/templates/CLAUDE.md ./CLAUDE.md
-
-# Marketing / landing page project:
-cp node_modules/claude-toolkit/templates/CLAUDE-marketing.md ./CLAUDE.md
+cp templates/CLAUDE.md ./CLAUDE.md             # app project (Next.js + Supabase)
+cp templates/CLAUDE-marketing.md ./CLAUDE.md   # marketing / landing page
 ```
 
 ## Project Conventions
 
 These filenames are recognized automatically by toolkit agents:
 
-- `docs/SCHEMA-SPEC.md` — Database schema spec. Agents like rls-tester and migration-checker read it for context.
+- `docs/SCHEMA-SPEC.md` — database schema spec. `rls-tester` and `migration-checker` read it for context.
 
 ## Repository Structure
 
 ```
-agents/              14 subagent definitions (.md files) — installed by bin/cli.mjs
-skills/              skill sources (subdirs with SKILL.md) — installed via `npx skills`
-templates/           CLAUDE.md starter templates
-bin/cli.mjs          npx CLI for subagents (zero dependencies)
-package.json         npm package config
+.claude-plugin/marketplace.json        marketplace manifest (lists the plugins)
+plugins/<name>/.claude-plugin/plugin.json
+plugins/<name>/skills/<skill>/SKILL.md
+plugins/<name>/agents/<agent>.md
+templates/                             CLAUDE.md starter templates
 ```
 
 ## Links
 
 - [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
-- [Claude Code Agents](https://docs.anthropic.com/en/docs/claude-code/agents)
+- [Claude Code Plugins](https://docs.anthropic.com/en/docs/claude-code/plugins)
 - [Claude Code GitHub](https://github.com/anthropics/claude-code)
 
 ## TODO
@@ -236,6 +226,7 @@ package.json         npm package config
 - [ ] doc-generator: Changelog generation from git history
 
 ### Infrastructure
-- [x] Setup script for automated integration (`npx claude-toolkit init`)
-- [ ] CI workflow templates (GitHub Actions, GitLab CI)
-- [ ] Claude Code Plugin for marketplace distribution
+- [x] Setup script for automated integration (superseded by plugin install)
+- [x] Claude Code Plugin for marketplace distribution
+- [ ] CI workflow: validate manifests + components on PR
+- [ ] Eval suites (`claude plugin eval`) beyond `test-pr`

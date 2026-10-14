@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "nic-core",
+  "description": "Stack-agnostic workflow skills and review subagents: worktrees, issue-to-PR, release planning, session handoff, commit/push/PR, plus comment, dependency, doc, type and verification agents.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Nic Pijpers",
+    "email": "nic@savage-coworking.com"
+  },
+  "homepage": "https://github.com/Kikolator/claude-toolkit",
+  "repository": "https://github.com/Kikolator/claude-toolkit",
+  "license": "MIT",
+  "keywords": ["workflow", "worktree", "github", "release-planning", "code-review"]
+}

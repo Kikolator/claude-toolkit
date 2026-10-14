@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "nic-nextjs-supabase",
+  "description": "Next.js + Supabase + Playwright specifics: scaffolding, E2E runs, PR test-plan verification, and subagents for RLS, migrations, accessibility, error handling and test authoring.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Nic Pijpers",
+    "email": "nic@savage-coworking.com"
+  },
+  "homepage": "https://github.com/Kikolator/claude-toolkit",
+  "repository": "https://github.com/Kikolator/claude-toolkit",
+  "license": "MIT",
+  "keywords": ["nextjs", "supabase", "playwright", "rls", "testing", "typescript"]
+}
