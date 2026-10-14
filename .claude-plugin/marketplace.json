@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-toolkit",
+  "description": "Nic Pijpers' personal Claude Code toolkit: reusable skills and subagents for Next.js / Supabase / TypeScript work, plus a stack-agnostic core.",
+  "owner": {
+    "name": "Nic Pijpers",
+    "email": "nic@savage-coworking.com"
+  },
+  "plugins": [
+    {
+      "name": "nic-core",
+      "description": "Stack-agnostic workflow skills and review subagents: worktrees, issue-to-PR, release planning, session handoff, commit/push/PR, plus comment, dependency, doc, type and verification agents.",
+      "category": "productivity",
+      "source": "./plugins/nic-core"
+    },
+    {
+      "name": "nic-nextjs-supabase",
+      "description": "Next.js + Supabase + Playwright specifics: scaffolding, E2E runs, PR test-plan verification, and subagents for RLS, migrations, accessibility, error handling and test authoring.",
+      "category": "development",
+      "source": "./plugins/nic-nextjs-supabase"
+    }
+  ]
+}
